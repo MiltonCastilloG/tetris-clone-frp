@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>¡Tetris!</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="./assets/css/index.css">
+  </head>
+  <body>
+    <audio autoplay loop class="music">
+        <source src="./assets/music/korobeiniki.mp3" type="audio/mpeg">
+    </audio>
+    <div class="js-menu-container row-container">
+      <div class="column-container">
+        <button class="js-game-start-btn game-start-btn initial-btn">Play Game</button>
+        <button class="js-load-btn load-btn initial-btn">Restore Game From Server</button>
+        <input class="js-game-hash game-hash" style="visibility: hidden">
+        <button class="js-game-hash-btn" style="visibility: hidden">Restore</button>
+      </div>
+    </div>
+    <!-- MENU AND GAME CONTAINERS DIVISION -->
+    <div class="js-game-container game-container" style="visibility: hidden">
+      <div class="row-container" >
+        <div class="left-side-container">
+          <div class="row-container hold-tetronimo-container">
+            <div class="column-container">
+              <h3>Hold</h3>
+              <div class="js-hold-tetronimo hold-tetronimo"></div>
+            </div>
+          </div>
+          <div class="row-container score-container">
+            <div class="column-container">
+              <h3>Score:</h3>
+              <h2 class="js-score score">0</h2>
+              <h3>Lines:</h3>
+              <h2 class="js-lines-score score">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="js-board board"></div>
+        <div class="right-side-container">
+          <div class="row-container upcomming-tetronimoes-container">
+            <div class="column-container js-upcomming-tetronimoes upcomming-tetronimoes">
+            </div>
+          </div>
+          <div class="row-container">
+            <div class="column-container">
+              <button class="js-pause-btn board-btn pause-btn"></button>
+              <button class="js-upload-game-btn board-btn upload-game-btn"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="./assets/js/lib/stream.js"></script>
+    <script src="./assets/js/lib/redux.js"></script>
+    <script src="./assets/js/lib/tetronimoes.js"></script>
+    <script src="./assets/js/settings.js"></script>
+    <script src="./assets/js/utils.js"></script>
+    <script src="./assets/js/tetronimo.js"></script>
+    <script src="./assets/js/board.js"></script>
+    <script src="./assets/js/game.js"></script>
+    <script src="./assets/js/menu.js"></script>
+  </body>
+</html>

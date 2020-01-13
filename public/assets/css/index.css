@@ -1,0 +1,86 @@
+body{
+    background-image: url('../img/tetris-wall.jpg');
+    background-size: cover;
+    background-position: center;
+}
+.block {
+    position: absolute;
+}
+.container {
+    display: flex;
+    justify-content: center;
+}
+.board {
+    width: 300px;
+    height: 600px;
+    background-color: black;
+}
+.hold-tetronimo-container {
+    width: 180px;
+    height: 170px;
+    background-color: black;
+    margin: 50px;
+}
+.hold-tetronimo{
+    width: 150px;
+    height: 150px;
+    background-repeat: no-repeat;
+    background-position: center
+}
+.score-container {
+    width: 180px;
+    height: 280px;
+    background-color: black;
+    margin: 50px;
+}
+.score {
+    color: white;
+    text-align: center;
+}
+.upcomming-tetronimoes-container {
+    width: 180px;
+    height: 300px;
+    background-color: black;
+    margin: 50px;
+}
+.upcomming {
+    width: 150px;
+    height: 150px;
+    margin-top:10px; 
+    margin-bottom:20px; 
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.row-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+.column-container{
+    display: flex;
+    flex-direction: column;
+}
+h3{
+    color: white;
+    text-align: center;
+}
+.board-btn{
+    height: 50px;
+    width: 50px;
+    margin: 20px;
+    background-size: cover;
+}
+.pause-btn{ 
+    background-image: url("../img/play_pause.png");
+}
+.upload-game-btn{
+    background-image: url("../img/upload-cloud.png");
+}
+.initial-btn{
+    height: 200px;
+    width: 200px;
+    margin: 50px;
+}
+.game-hash{
+    margin-bottom: 5px;
+}
