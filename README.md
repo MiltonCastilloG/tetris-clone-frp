@@ -1,1 +1,1 @@
-# Tetris Clone Using Functional Programming Principles Without Using Any Libraries
+# Tetris Clone Using Functional Programming Principles And No Libraries
