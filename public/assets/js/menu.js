@@ -5,9 +5,9 @@ const showBoard = () => {
 }
 
 const prepareGame = () =>{
-    const tetronimoState = getRandomTetronimo();
+    const tetrominoState = getRandomTetromino();
     const boardState = {
-        tetronimoesBank: [getRandomTetronimo(),getRandomTetronimo(),getRandomTetronimo()],
+        tetrominoesBank: [getRandomTetromino(),getRandomTetromino(),getRandomTetromino()],
         hold: undefined,
         lastHold: undefined,
         score: 0,
@@ -16,28 +16,28 @@ const prepareGame = () =>{
         lockHold: false
     }
     const mapState = [...BINARY_MAP];
-    addTetronimoToBoard(tetronimoState, FALLING_BLOCK_CLASS)
+    addTetrominoToBoard(tetrominoState, FALLING_BLOCK_CLASS)
     showBoard();
-    return {tetronimoState, mapState, boardState};
+    return {tetrominoState, mapState, boardState};
 }
 const loadGame = async () => {
     const hash = document.querySelector(".js-game-hash").value
     const response = await fetchForSetup(hash);
     const data = await response.json();
-    const tetronimoState = data.tetronimo;
+    const tetrominoState = data.tetromino;
     const mapState = data.binaryMap;
     const boardState = data.boardData;
     showBoard()
 
-    const {hold, score, totalLines, tetronimoesBank} = boardState;
+    const {hold, score, totalLines, tetrominoesBank} = boardState;
     if(hold !== undefined)
         addHoldToBoard(hold);
     addScoreToBoard(score, totalLines);
-    addUpcomingTetronimoesToBoard(tetronimoesBank)
+    addUpcomingTetrominoesToBoard(tetrominoesBank)
     remapBlocksVisualization( mapState )
-    addTetronimoToBoard(tetronimoState, FALLING_BLOCK_CLASS)
+    addTetrominoToBoard(tetrominoState, FALLING_BLOCK_CLASS)
 
-    return {tetronimoState, mapState, boardState}
+    return {tetrominoState, mapState, boardState}
 }
 
 const showInputForFetch = () => {

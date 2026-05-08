@@ -63,7 +63,7 @@ Actions:
 - In `board.js`, overlay a short (80–140ms) flash on affected rows, driven by timestamp and redraw.
 - Keep it visual-only (no timing or gameplay behavior changes).
 
-## 5) Replace hold/upcoming previews from images to canvas
+## 5) Replace tetromino previews with canvas
 
 Files:
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/index.html`
@@ -71,14 +71,41 @@ Files:
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 
 Actions:
-- Replace image-background based preview nodes with small canvases:
+- Replace image-background based tetrominoes with small canvases:
   - hold area: one canvas
   - upcoming area: one canvas per queued tetromino
 - Render from tetromino shape data (same color palette), centered/scaled in preview canvas.
 - Keep current API calls:
-  - `addHoldToBoard(holdTetronimo)`
-  - `addUpcomingTetronimoesToBoard(tetronimoesBank)`
+  - `addHoldToBoard(holdTetromino)`
+  - `addUpcomingTetrominoesToBoard(tetrominoesBank)`
 - Remove PNG dependency for tetromino previews after this step.
+
+## 5.1) Canonical tetromino definitions and gameplay source migration
+
+Files:
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/lib/tetromino-definitions.js`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/tetromino.js`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/lib/tetrominoes.js`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/game.js`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
+
+Actions:
+- Rename `tetronimo*` terminology to `tetromino*` across file names and symbols.
+- Use string color names as canonical IDs in state and definitions.
+- Define all 4 rotation states explicitly as coordinate arrays in a local 4x4 frame.
+- Use piece-level spawn anchors and per-rotation offsets.
+- Keep preview rendering on state `0`.
+
+## 5.2) Collision redesign using tetromino metadata
+
+Files:
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/utils.js`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/tetromino.js`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/lib/tetromino-definitions.js`
+
+Actions:
+- Rework collision checks to consume tetromino metadata directly.
+- Keep behavior equivalent first, then iterate improvements with tests.
 
 ## 6) Keep compatibility with existing flow
 

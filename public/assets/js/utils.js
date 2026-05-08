@@ -21,19 +21,19 @@ const checkCollisionLeft = binaryMap => ({y, x}) => checkLeftBorder(x) ? !isSpac
 const checkCollisionRight = binaryMap => ({y, x}) => checkRightBorder(x, binaryMap[0].length) ? !isSpaceFilled(binaryMap[y][x+1]) : false;
 
 const booleanReducer = (acc, value) => acc && value; 
-const checkTetronimoCollisionBottom = getBinaryMap => tetronimo => tetronimo.map( checkCollisionBottom(getBinaryMap() ) ).reduce(booleanReducer);
-const checkTetronimoCollisionRight = getBinaryMap => tetronimo => tetronimo.map(checkCollisionRight(getBinaryMap()) ).reduce(booleanReducer);
-const checkTetronimoCollisionLeft = getBinaryMap => tetronimo => tetronimo.map(checkCollisionLeft(getBinaryMap()) ).reduce(booleanReducer);
+const checkTetrominoCollisionBottom = getBinaryMap => tetromino => tetromino.map( checkCollisionBottom(getBinaryMap() ) ).reduce(booleanReducer);
+const checkTetrominoCollisionRight = getBinaryMap => tetromino => tetromino.map(checkCollisionRight(getBinaryMap()) ).reduce(booleanReducer);
+const checkTetrominoCollisionLeft = getBinaryMap => tetromino => tetromino.map(checkCollisionLeft(getBinaryMap()) ).reduce(booleanReducer);
 const topBooleanReducer = (acc, value) => acc || value; 
-const checkTetronimoCollisionTop = tetronimo => tetronimo.map(checkTopBorder).reduce(topBooleanReducer);
+const checkTetrominoCollisionTop = tetromino => tetromino.map(checkTopBorder).reduce(topBooleanReducer);
 
-const tetronimoLanding = () => { 
+const tetrominoLanding = () => { 
     
     const erasedLinesLen = eraseLines();
     return erasedLinesLen;
 }
 
-const fetchForUpload = async (tetronimoToSave, binaryMapTosave, boardDataToSave) => {
+const fetchForUpload = async (tetrominoToSave, binaryMapTosave, boardDataToSave) => {
     return await fetch('upload/game', {
     method: 'POST',
     headers: {
@@ -41,7 +41,7 @@ const fetchForUpload = async (tetronimoToSave, binaryMapTosave, boardDataToSave)
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
     },
-    body: JSON.stringify({tetronimo: tetronimoToSave, binaryMap: binaryMapTosave, boardData: boardDataToSave})
+    body: JSON.stringify({tetromino: tetrominoToSave, binaryMap: binaryMapTosave, boardData: boardDataToSave})
   });
 }
 

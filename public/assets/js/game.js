@@ -6,24 +6,24 @@ const pauseGame = new Stream(next => document.querySelector(".js-pause-btn").add
 const uploadGame = new Stream(next => document.querySelector(".js-upload-game-btn").addEventListener("click", next) );
 
 
-const InitGame = ({tetronimoState, mapState, boardState}) => {
-    const updateTetronimoPosition = (state = tetronimoState, action) => {
+const InitGame = ({tetrominoState, mapState, boardState}) => {
+    const updateTetrominoPosition = (state = tetrominoState, action) => {
         switch (action.type) {
             case 'DOWN':
-                return {...state, tetronimo: moveTetronimoDown(state)};
+                return {...state, tetromino: moveTetrominoDown(state)};
             case 'HORIZONTAL':
-                return {...state, tetronimo: moveTetronimoHorizontal(action.direction, state)};
+                return {...state, tetromino: moveTetrominoHorizontal(action.direction, state)};
             case 'CHANGE_ORIENTATION':
-                return {...state, orientation: changeTetronimoOrientation(state)};
+                return {...state, orientation: changeTetrominoOrientation(state)};
             case 'RESTART':
                 return action.newState
             default:
                 return state
         }
     }
-    const tetronimo = redux.createStore(updateTetronimoPosition);
-    const getCurrentTetronimo = pipe(tetronimo.getState, currentTetronimo) 
-    tetronimo.subscribe( pipe(currentTetronimo, moveFallingTetronimo) )
+    const tetromino = redux.createStore(updateTetrominoPosition);
+    const getCurrentTetromino = pipe(tetromino.getState, currentTetromino) 
+    tetromino.subscribe( pipe(currentTetromino, moveFallingTetromino) )
     
     const updateBinaryMap = (state = mapState, action) => {
         switch (action.type) {
@@ -58,29 +58,29 @@ const InitGame = ({tetronimoState, mapState, boardState}) => {
     const updateBoardData = (state = boardState, action) => {
         switch (action.type) {
             case 'HOLD':
-                return {...state, hold: action.newTetronimo, lockHold: true};
+                return {...state, hold: action.newTetromino, lockHold: true};
             case 'UNLOCK_HOLD':
                 return {...state, lockHold: false}
-            case 'HOLD&TETRONIMO':{
-                state.tetronimoesBank.shift()
-                state.tetronimoesBank.push(action.lastInBank)
-                return {...state, hold: action.newTetronimo, tetronimoesBank: state.tetronimoesBank};
+            case 'HOLD&TETROMINO':{
+                state.tetrominoesBank.shift()
+                state.tetrominoesBank.push(action.lastInBank)
+                return {...state, hold: action.newTetromino, tetrominoesBank: state.tetrominoesBank};
             }
             case 'COMPLETE_LANDING':{
-                state.tetronimoesBank.shift()
-                state.tetronimoesBank.push(action.lastInBank)
+                state.tetrominoesBank.shift()
+                state.tetrominoesBank.push(action.lastInBank)
                 return {...state, 
-                    tetronimoesBank: state.tetronimoesBank,
+                    tetrominoesBank: state.tetrominoesBank,
                     lockHold: false, 
                     totalLines: state.totalLines + action.erasedLines,
                     score: state.score + state.scoreByErasedLines[action.erasedLines-1]
                 };
             }
             case 'PARTIAL_LANDING':{
-                state.tetronimoesBank.shift()
-                state.tetronimoesBank.push(action.lastInBank)
+                state.tetrominoesBank.shift()
+                state.tetrominoesBank.push(action.lastInBank)
                 return {...state, 
-                    tetronimoesBank: state.tetronimoesBank,
+                    tetrominoesBank: state.tetrominoesBank,
                     lockHold: false, 
                 };
             }
@@ -92,72 +92,71 @@ const InitGame = ({tetronimoState, mapState, boardState}) => {
     }
     const boardData = redux.createStore(updateBoardData);
     boardData.subscribe(state=>{
-        const {hold, score, totalLines, tetronimoesBank} = state;
-        if(hold !== undefined)
-            addHoldToBoard(hold);
+        const {hold, score, totalLines, tetrominoesBank} = state;
+        addHoldToBoard(hold);
         addScoreToBoard(score, totalLines);
-        addUpcomingTetronimoesToBoard(tetronimoesBank)
+        addUpcomingTetrominoesToBoard(tetrominoesBank)
     })
 
     // const exampleScanTicks = ticks.scan(acc=>({top: acc.top + 1}), {top: 1}).map(acc=>({top: acc.top +3})).subscribe(console.log)
-    const actionTicks = ticks.map( pipe(getCurrentTetronimo, checkTetronimoCollisionBottom(binaryMapState) ) );
+    const actionTicks = ticks.map( pipe(getCurrentTetromino, checkTetrominoCollisionBottom(binaryMapState) ) );
     const movementTicks = actionTicks.filter(inBorder => inBorder);
-    const landingTicks = actionTicks.filter(inBorder => !inBorder).map( pipe(getCurrentTetronimo, checkTetronimoCollisionTop ) )
+    const landingTicks = actionTicks.filter(inBorder => !inBorder).map( pipe(getCurrentTetromino, checkTetrominoCollisionTop ) )
     const topLanding = landingTicks.filter(topBorder => topBorder);
     const groundLanding = landingTicks.filter(topBorder => !topBorder);
-    movementTicks.subscribe(()=> tetronimo.dispatch({ type: 'DOWN' }) );
+    movementTicks.subscribe(()=> tetromino.dispatch({ type: 'DOWN' }) );
 
     const fillMapSpace = color => ({y, x}) => binaryMap.dispatch({type: 'FILL_SPACE', x: x, y: y, fillWith: color});
     groundLanding.subscribe(()=>{
-        const newTetronimo = boardData.getState().tetronimoesBank[0];
-        const nextTetronimo = getRandomTetronimo();
+        const newTetromino = boardData.getState().tetrominoesBank[0];
+        const nextTetromino = getRandomTetromino();
         
         removeFallingBlocks();
-        getCurrentTetronimo().forEach( fillMapSpace(tetronimo.getState().color) );
+        getCurrentTetromino().forEach( fillMapSpace(tetromino.getState().color) );
         const linesToErase = eraseLines( binaryMapState() );
 
-        tetronimo.dispatch({ type: 'RESTART', newState: newTetronimo });
+        tetromino.dispatch({ type: 'RESTART', newState: newTetromino });
         if(linesToErase.length>0){
             binaryMap.dispatch({type: "ERASE_LINES", yPositions: linesToErase})
-            boardData.dispatch({ type: 'COMPLETE_LANDING', lastInBank: nextTetronimo, erasedLines: linesToErase.length})
+            boardData.dispatch({ type: 'COMPLETE_LANDING', lastInBank: nextTetromino, erasedLines: linesToErase.length})
         }  
-        else boardData.dispatch({ type: 'PARTIAL_LANDING', lastInBank: nextTetronimo})
+        else boardData.dispatch({ type: 'PARTIAL_LANDING', lastInBank: nextTetromino})
 
         remapBlocksVisualization( binaryMapState() )
-        addTetronimoToBoard(newTetronimo, FALLING_BLOCK_CLASS);
+        addTetrominoToBoard(newTetromino, FALLING_BLOCK_CLASS);
     })
 
     const isDown = event => "ArrowDown" === event.code;
     const isUp = event => "ArrowUp" === event.code;
     const upKeyDowns = keyDowns.filter(isUp)
-    const downKeyDowns = keyDowns.filter(isDown).filter( pipe(getCurrentTetronimo, checkTetronimoCollisionBottom(binaryMapState) ) )
-    upKeyDowns.subscribe(() => tetronimo.dispatch({ type: 'CHANGE_ORIENTATION'}));
-    downKeyDowns.subscribe(()=>tetronimo.dispatch({ type: 'DOWN' }))
+    const downKeyDowns = keyDowns.filter(isDown).filter( pipe(getCurrentTetromino, checkTetrominoCollisionBottom(binaryMapState) ) )
+    upKeyDowns.subscribe(() => tetromino.dispatch({ type: 'CHANGE_ORIENTATION'}));
+    downKeyDowns.subscribe(()=>tetromino.dispatch({ type: 'DOWN' }))
 
     const isC = event => "KeyC" === event.code;
     const cKeyDowns = keyDowns.filter(isC).filter(()=>!boardData.getState().lockHold)
     cKeyDowns.subscribe(() => {
-        const {color} = tetronimo.getState();
-        const {hold, tetronimoesBank} = boardData.getState();
-        const fallingTetronimo = getSpecificTetronimo(color);
-        const newTetronimoInBoard = hold || tetronimoesBank[0];
+        const {color} = tetromino.getState();
+        const {hold, tetrominoesBank} = boardData.getState();
+        const fallingTetromino = getSpecificTetromino(color);
+        const newTetrominoInBoard = hold || tetrominoesBank[0];
         if(hold === undefined)
-            boardData.dispatch({ type: 'HOLD&TETRONIMO', newTetronimo: fallingTetronimo, lastInBank: getRandomTetronimo()})    
+            boardData.dispatch({ type: 'HOLD&TETROMINO', newTetromino: fallingTetromino, lastInBank: getRandomTetromino()})    
         else
-            boardData.dispatch({ type: 'HOLD', newTetronimo: fallingTetronimo })    
+            boardData.dispatch({ type: 'HOLD', newTetromino: fallingTetromino })    
 
-        tetronimo.dispatch({ type: 'RESTART', newState: newTetronimoInBoard})
-        updateTetronimoColor(newTetronimoInBoard.color)
+        tetromino.dispatch({ type: 'RESTART', newState: newTetrominoInBoard})
+        updateTetrominoColor(newTetrominoInBoard.color)
     });
 
     const LEFT = -1;
     const RIGHT = 1;
     const isLeft = event => "ArrowLeft" === event.code;
     const isRight = event => "ArrowRight" === event.code;
-    const leftKeyDowns = keyDowns.filter(isLeft).filter( pipe(getCurrentTetronimo, checkTetronimoCollisionLeft(binaryMapState) ) ).map(() => LEFT)
-    const rightKeyDowns = keyDowns.filter(isRight).filter( pipe(getCurrentTetronimo, checkTetronimoCollisionRight(binaryMapState) ) ).map(() => RIGHT);
+    const leftKeyDowns = keyDowns.filter(isLeft).filter( pipe(getCurrentTetromino, checkTetrominoCollisionLeft(binaryMapState) ) ).map(() => LEFT)
+    const rightKeyDowns = keyDowns.filter(isRight).filter( pipe(getCurrentTetromino, checkTetrominoCollisionRight(binaryMapState) ) ).map(() => RIGHT);
     const movements = Stream.merge(leftKeyDowns, rightKeyDowns);
-    movements.subscribe(direction => tetronimo.dispatch({ type: 'HORIZONTAL', direction: direction }));
+    movements.subscribe(direction => tetromino.dispatch({ type: 'HORIZONTAL', direction: direction }));
 
     const endGame = gameEnded  => {
         if(!gameEnded){
@@ -171,10 +170,10 @@ const InitGame = ({tetronimoState, mapState, boardState}) => {
 
     uploadGame.scan(flag=>flag + 1, 0).subscribe(async ()=>{
         Stream.pauseAll(movementTicks, upKeyDowns, movements);
-        const tetronimoToSave = tetronimo.getState();
+        const tetrominoToSave = tetromino.getState();
         const binaryMapTosave = binaryMap.getState();
         const boardDataToSave = boardData.getState();
-        const response = await fetchForUpload(tetronimoToSave, binaryMapTosave, boardDataToSave)
+        const response = await fetchForUpload(tetrominoToSave, binaryMapTosave, boardDataToSave)
         const data = await response.json();
         alert(`Game save with hash ${data.hash}`)
     });

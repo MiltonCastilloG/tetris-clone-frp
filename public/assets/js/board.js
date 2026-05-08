@@ -5,6 +5,8 @@ const boardViewState = {
     fallingBlocks: [],
     fallingColor: null
 };
+const PREVIEW_FALLBACK_SIZE = 150;
+const PREVIEW_PADDING_RATIO = 0.16;
 
 const drawPlayfieldBackground = ctx => {
     const background = ctx.createLinearGradient(0, 0, 0, BOARD_HEIGHT);
@@ -79,6 +81,90 @@ const drawCell = (ctx, { y, x }, color) => {
     ctx.strokeRect(left, top, width, height);
 };
 
+const getPreviewDimensions = canvas => ({
+    width: canvas.clientWidth || PREVIEW_FALLBACK_SIZE,
+    height: canvas.clientHeight || PREVIEW_FALLBACK_SIZE
+});
+
+const getPreviewContext = canvas => {
+    if (!canvas) return null;
+    const { width, height } = getPreviewDimensions(canvas);
+    const dpr = window.devicePixelRatio || 1;
+    const expectedWidth = Math.floor(width * dpr);
+    const expectedHeight = Math.floor(height * dpr);
+
+    if (canvas.width !== expectedWidth || canvas.height !== expectedHeight) {
+        canvas.width = expectedWidth;
+        canvas.height = expectedHeight;
+    }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, width, height };
+};
+
+const drawPreviewCell = (ctx, left, top, size, color) => {
+    const inset = Math.max(1, Math.floor(size * 0.08));
+    const width = Math.max(1, size - inset * 2);
+    const height = Math.max(1, size - inset * 2);
+    const x = left + inset;
+    const y = top + inset;
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, width, height);
+
+    const shade = ctx.createLinearGradient(x, y, x, y + height);
+    shade.addColorStop(0, "rgba(255, 255, 255, 0.2)");
+    shade.addColorStop(1, "rgba(0, 0, 0, 0.18)");
+    ctx.fillStyle = shade;
+    ctx.fillRect(x, y, width, height);
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
+};
+
+const drawPreviewBackground = (ctx, width, height) => {
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = "#090b10";
+    ctx.fillRect(0, 0, width, height);
+};
+
+const drawTetrominoPreview = (canvas, tetrominoData) => {
+    const preview = getPreviewContext(canvas);
+    if (!preview) return;
+    const { ctx, width, height } = preview;
+    drawPreviewBackground(ctx, width, height);
+    if (!tetrominoData || !tetrominoData.tetromino || !tetrominoData.tetromino[0]) return;
+
+    const previewBlocks = tetrominoData.tetromino[0];
+    if (!previewBlocks.length) return;
+
+    const xs = previewBlocks.map(block => block.x);
+    const ys = previewBlocks.map(block => block.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const pieceWidth = maxX - minX + 1;
+    const pieceHeight = maxY - minY + 1;
+
+    const availableWidth = width * (1 - PREVIEW_PADDING_RATIO * 2);
+    const availableHeight = height * (1 - PREVIEW_PADDING_RATIO * 2);
+    const cellSize = Math.floor(Math.min(availableWidth / pieceWidth, availableHeight / pieceHeight));
+    const renderedWidth = pieceWidth * cellSize;
+    const renderedHeight = pieceHeight * cellSize;
+    const offsetX = Math.floor((width - renderedWidth) / 2);
+    const offsetY = Math.floor((height - renderedHeight) / 2);
+    const color = colorFactory(tetrominoData.color);
+
+    previewBlocks.forEach(({ x, y }) => {
+        const previewX = x - minX;
+        const previewY = y - minY;
+        drawPreviewCell(ctx, offsetX + previewX * cellSize, offsetY + previewY * cellSize, cellSize, color);
+    });
+};
+
 const drawBoard = () => {
     const ctx = getBoardContext();
     if (!ctx) return;
@@ -106,18 +192,18 @@ const drawBoard = () => {
     ctx.strokeRect(1, 1, BOARD_WIDTH - 2, BOARD_HEIGHT - 2);
 };
 
-const moveFallingTetronimo = tetronimo => {
-    boardViewState.fallingBlocks = tetronimo.map(block => ({ ...block }));
+const moveFallingTetromino = tetromino => {
+    boardViewState.fallingBlocks = tetromino.map(block => ({ ...block }));
     drawBoard();
 };
 
-const updateTetronimoColor = color => {
+const updateTetrominoColor = color => {
     boardViewState.fallingColor = color;
     drawBoard();
 };
 
-const addTetronimoToBoard = ({ tetronimo, orientation, color }) => {
-    boardViewState.fallingBlocks = tetronimo[orientation].map(block => ({ ...block }));
+const addTetrominoToBoard = ({ tetromino, orientation, color }) => {
+    boardViewState.fallingBlocks = tetromino[orientation].map(block => ({ ...block }));
     boardViewState.fallingColor = color;
     drawBoard();
 };
@@ -128,19 +214,22 @@ const removeFallingBlocks = () => {
     drawBoard();
 };
 
-const addHoldToBoard = holdTetronimo => document.querySelector(`.${HOLD_TETRONIMO_CLASS}`).style.backgroundImage = `url(./assets/img/tetronimo_${holdTetronimo.color}.png)`;
+const addHoldToBoard = holdTetromino => {
+    const holdCanvas = document.querySelector(`.${HOLD_TETROMINO_CLASS}`);
+    drawTetrominoPreview(holdCanvas, holdTetromino);
+};
 const addScoreToBoard = (score, lineScore) => {
     document.querySelector(`.${SCORE_CLASS}`).textContent = score;
     document.querySelector(`.${LINE_SCORE_CLASS}`).textContent = lineScore;
 };
-const addUpcomingTetronimoesToBoard = tetronimoesBank => {
-    const upcommingSpace = document.querySelector(`.${UPCOMMING_TETRONIMOES}`);
+const addUpcomingTetrominoesToBoard = tetrominoesBank => {
+    const upcommingSpace = document.querySelector(`.${UPCOMMING_TETROMINOES}`);
     upcommingSpace.innerHTML = "";
-    tetronimoesBank.forEach(tetronimo => {
-        const upcomming = document.createElement("div");
+    tetrominoesBank.forEach(tetromino => {
+        const upcomming = document.createElement("canvas");
         upcomming.className = `upcomming js-upcomming`;
-        upcomming.style.backgroundImage = `url(./assets/img/tetronimo_${tetronimo.color}.png)`;
         upcommingSpace.appendChild(upcomming);
+        drawTetrominoPreview(upcomming, tetromino);
     });
 };
 
