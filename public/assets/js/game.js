@@ -4,9 +4,41 @@ const ticks = new Stream( next => setInterval(next, INTIAL_CLOCK_SPEED) )
 const keyDowns = new Stream(next => document.addEventListener("keydown", next) );
 const pauseGame = new Stream(next => document.querySelector(".js-pause-btn").addEventListener("click", next) );
 const uploadGame = new Stream(next => document.querySelector(".js-upload-game-btn").addEventListener("click", next) );
+const LOCK_DELAY_TICKS = 2;
+const LOCK_DELAY_RESET_CAP = 15;
 
 
 const InitGame = ({tetrominoState, mapState, boardState}) => {
+    const lockDelayState = {
+        active: false,
+        ticksRemaining: 0,
+        resetsUsed: 0
+    };
+    const clearGroundLockDelay = () => {
+        lockDelayState.active = false;
+        lockDelayState.ticksRemaining = 0;
+    };
+    const resetLockDelayForNewPiece = () => {
+        clearGroundLockDelay();
+        lockDelayState.resetsUsed = 0;
+    };
+    const consumeGroundContactTick = () => {
+        if (!lockDelayState.active) {
+            lockDelayState.active = true;
+            lockDelayState.ticksRemaining = LOCK_DELAY_TICKS;
+            return false;
+        }
+
+        lockDelayState.ticksRemaining -= 1;
+        return lockDelayState.ticksRemaining <= 0;
+    };
+    const resetLockDelayFromMovement = () => {
+        if (!lockDelayState.active) return;
+        if (lockDelayState.resetsUsed >= LOCK_DELAY_RESET_CAP) return;
+        lockDelayState.resetsUsed += 1;
+        lockDelayState.ticksRemaining = LOCK_DELAY_TICKS;
+    };
+
     const updateTetrominoPosition = (state = tetrominoState, action) => {
         switch (action.type) {
             case 'DOWN':
@@ -104,44 +136,85 @@ const InitGame = ({tetrominoState, mapState, boardState}) => {
         addScoreToBoard(score, totalLines);
         addUpcomingTetrominoesToBoard(tetrominoesBank)
     })
-
-    // const exampleScanTicks = ticks.scan(acc=>({top: acc.top + 1}), {top: 1}).map(acc=>({top: acc.top +3})).subscribe(console.log)
-    const actionTicks = ticks.map(() => checkTetrominoCollisionBottom(binaryMapState)(getTetrominoState()));
-    const movementTicks = actionTicks.filter(inBorder => inBorder);
-    const landingTicks = actionTicks.filter(inBorder => !inBorder).map( pipe(getCurrentTetromino, checkTetrominoCollisionTop ) )
-    const topLanding = landingTicks.filter(topBorder => topBorder);
-    const groundLanding = landingTicks.filter(topBorder => !topBorder);
-    movementTicks.subscribe(()=> tetromino.dispatch({ type: 'DOWN' }) );
-
     const fillMapSpace = color => ({y, x}) => binaryMap.dispatch({type: 'FILL_SPACE', x: x, y: y, fillWith: color});
-    groundLanding.subscribe(()=>{
+    const canCurrentTetrominoMoveDown = () =>
+        checkTetrominoCollisionBottom(binaryMapState)(getTetrominoState());
+    const isCurrentTetrominoInTopCollision = () =>
+        pipe(getCurrentTetromino, checkTetrominoCollisionTop)();
+
+    const settleCurrentTetromino = () => {
         const newTetromino = boardData.getState().tetrominoesBank[0];
         const nextTetromino = getRandomTetromino();
         
+        resetLockDelayForNewPiece();
         removeFallingBlocks();
-        getCurrentTetromino().forEach( fillMapSpace(tetromino.getState().color) );
-        const linesToErase = eraseLines( binaryMapState() );
+        getCurrentTetromino().forEach(fillMapSpace(tetromino.getState().color));
+        const linesToErase = eraseLines(binaryMapState());
 
         tetromino.dispatch({ type: 'RESTART', newState: newTetromino });
-        if(linesToErase.length>0){
+        if (linesToErase.length > 0) {
+            flashClearedRows(linesToErase);
             binaryMap.dispatch({type: "ERASE_LINES", yPositions: linesToErase})
             boardData.dispatch({ type: 'COMPLETE_LANDING', lastInBank: nextTetromino, erasedLines: linesToErase.length})
         }  
         else boardData.dispatch({ type: 'PARTIAL_LANDING', lastInBank: nextTetromino})
 
-        remapBlocksVisualization( binaryMapState() )
+        remapBlocksVisualization(binaryMapState())
         addTetrominoToBoard(newTetromino, FALLING_BLOCK_CLASS);
-    })
+    };
+    const settleCurrentTetrominoIfSafe = () => {
+        if (!isCurrentTetrominoInTopCollision()) {
+            settleCurrentTetromino();
+        }
+    };
+
+    // const exampleScanTicks = ticks.scan(acc=>({top: acc.top + 1}), {top: 1}).map(acc=>({top: acc.top +3})).subscribe(console.log)
+    const actionTicks = ticks.map(canCurrentTetrominoMoveDown);
+    const movementTicks = actionTicks.filter(inBorder => inBorder);
+    const landingTicks = actionTicks.filter(inBorder => !inBorder).map( pipe(getCurrentTetromino, checkTetrominoCollisionTop ) )
+    const topLanding = landingTicks.filter(topBorder => topBorder);
+    const groundLanding = landingTicks.filter(topBorder => !topBorder).filter(() => consumeGroundContactTick());
+    movementTicks.subscribe(()=> {
+        clearGroundLockDelay();
+        tetromino.dispatch({ type: 'DOWN' });
+    });
+
+    groundLanding.subscribe(settleCurrentTetromino)
 
     const isDown = event => "ArrowDown" === event.code;
     const isUp = event => "ArrowUp" === event.code;
     const upKeyDowns = keyDowns.filter(isUp)
-    const downKeyDowns = keyDowns.filter(isDown).filter(() => checkTetrominoCollisionBottom(binaryMapState)(getTetrominoState()))
+    const downKeyDowns = keyDowns.filter(isDown)
     const safeUpKeyDowns = upKeyDowns
         .map(() => getValidRotationKick(binaryMapState)(getTetrominoState()))
         .filter(rotationKick => rotationKick !== null);
-    safeUpKeyDowns.subscribe(rotationKick => tetromino.dispatch({ type: 'CHANGE_ORIENTATION', rotationKick }));
-    downKeyDowns.subscribe(()=>tetromino.dispatch({ type: 'DOWN' }))
+    safeUpKeyDowns.subscribe(rotationKick => {
+        tetromino.dispatch({ type: 'CHANGE_ORIENTATION', rotationKick });
+        resetLockDelayFromMovement();
+    });
+    downKeyDowns.subscribe(()=>{
+        const canMoveDown = canCurrentTetrominoMoveDown();
+        if (canMoveDown) {
+            clearGroundLockDelay();
+            tetromino.dispatch({ type: 'DOWN' });
+
+            const canMoveAfterDrop = canCurrentTetrominoMoveDown();
+            if (!canMoveAfterDrop) settleCurrentTetrominoIfSafe();
+            return;
+        }
+
+        settleCurrentTetrominoIfSafe();
+    })
+
+    const isSpace = event => "Space" === event.code;
+    const hardDropKeyDowns = keyDowns.filter(isSpace);
+    hardDropKeyDowns.subscribe(() => {
+        while (canCurrentTetrominoMoveDown()) {
+            tetromino.dispatch({ type: 'DOWN' });
+        }
+
+        settleCurrentTetrominoIfSafe();
+    });
 
     const isC = event => "KeyC" === event.code;
     const cKeyDowns = keyDowns.filter(isC).filter(()=>!boardData.getState().lockHold)
@@ -155,6 +228,7 @@ const InitGame = ({tetrominoState, mapState, boardState}) => {
         else
             boardData.dispatch({ type: 'HOLD', newTetromino: fallingTetromino })    
 
+        resetLockDelayForNewPiece();
         tetromino.dispatch({ type: 'RESTART', newState: newTetrominoInBoard})
         updateTetrominoColor(newTetrominoInBoard.color)
     });
@@ -166,7 +240,10 @@ const InitGame = ({tetrominoState, mapState, boardState}) => {
     const leftKeyDowns = keyDowns.filter(isLeft).filter(() => checkTetrominoCollisionLeft(binaryMapState)(getTetrominoState())).map(() => LEFT)
     const rightKeyDowns = keyDowns.filter(isRight).filter(() => checkTetrominoCollisionRight(binaryMapState)(getTetrominoState())).map(() => RIGHT);
     const movements = Stream.merge(leftKeyDowns, rightKeyDowns);
-    movements.subscribe(direction => tetromino.dispatch({ type: 'HORIZONTAL', direction: direction }));
+    movements.subscribe(direction => {
+        tetromino.dispatch({ type: 'HORIZONTAL', direction: direction });
+        resetLockDelayFromMovement();
+    });
 
     const endGame = gameEnded  => {
         if(!gameEnded){

@@ -1,4 +1,4 @@
-const INTIAL_CLOCK_SPEED = 200; //in ms
+const INTIAL_CLOCK_SPEED = 400; //in ms
 
 const BOARD_WIDTH = 300; //in px
 const BOARD_HEIGHT = 600; //in px

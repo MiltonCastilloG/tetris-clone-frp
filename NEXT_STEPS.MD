@@ -16,6 +16,7 @@ Left:
 - `4` line-clear flash effect.
 - `6` compatibility pass and minimal integration hooks verification.
 - `7` full validation checklist run.
+- `8` key controls pass (focus: down input bypasses lock-delay wait).
 
 ## Goal
 
@@ -68,17 +69,21 @@ Actions:
   4. active falling piece
 - Recompute ghost whenever falling piece/map changes.
 
-## 4) Implement line-clear flash effect
+## 4) Improve lock delay/floor rotation and implement line-clear flash
 
 Files:
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/game.js`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/utils.js`
 
 Actions:
+- Add lock delay of `1` gravity tick before ground settle.
+- Reset lock delay on successful left/right/rotate movement, capped at `15` resets.
+- Ensure floor-aware rotation kick (including upward kick) counts as movement for lock-delay reset.
 - Add a renderer function like `flashClearedRows(yPositions)`.
 - In `game.js`, call it when `linesToErase.length > 0`.
 - In `board.js`, overlay a short (80–140ms) flash on affected rows, driven by timestamp and redraw.
-- Keep it visual-only (no timing or gameplay behavior changes).
+- Keep existing line-clear scoring behavior unchanged.
 
 ## 5) Replace tetromino previews with canvas
 
@@ -160,9 +165,20 @@ Actions:
 - Only add minimal hook(s) needed for flash.
 - Preserve existing startup/load behavior.
 
-## 7) Validation checklist
+## 7) Key controls pass (lock-delay interactions)
 
-- Game controls and collisions unchanged.
+Files:
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/game.js`
+
+Actions:
+- Review active key mappings and behaviors (`ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Space`, `KeyC`).
+- Make `ArrowDown` movement bypass ground lock-delay wait (immediate settle behavior once piece reaches floor).
+- Ensure `ArrowDown` behavior stays consistent with manual drop expectations and does not regress scoring/line clear flow.
+
+## 8) Validation checklist
+
+- Game controls work correctly
+- collisions unchanged.
 - Hold/swap still works.
 - Queue updates correctly.
 - Ghost always matches actual landing position.

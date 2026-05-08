@@ -3,7 +3,10 @@ const getBoardCanvas = () => document.querySelector(".js-board");
 const boardViewState = {
     lockedMap: BINARY_MAP.map(row => [...row]),
     fallingBlocks: [],
-    fallingColor: null
+    fallingColor: null,
+    flashRows: [],
+    flashUntilMs: 0,
+    flashFrameId: null
 };
 const PREVIEW_FALLBACK_SIZE = 150;
 const PREVIEW_PADDING_RATIO = 0.16;
@@ -40,6 +43,40 @@ const drawPlayfieldGrid = ctx => {
         ctx.lineTo(BOARD_WIDTH, py);
         ctx.stroke();
     }
+};
+
+const drawFlashOverlay = (ctx, nowMs) => {
+    if (!boardViewState.flashRows.length || nowMs >= boardViewState.flashUntilMs) return;
+    const remainingMs = boardViewState.flashUntilMs - nowMs;
+    const alpha = Math.min(0.75, Math.max(0.2, remainingMs / 140));
+
+    ctx.save();
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    boardViewState.flashRows.forEach(y => {
+        const top = y * VERTICAL_MOVEMENT;
+        ctx.fillRect(0, top, BOARD_WIDTH, VERTICAL_MOVEMENT);
+    });
+    ctx.restore();
+};
+
+const runFlashRedrawLoop = () => {
+    if (boardViewState.flashFrameId) {
+        cancelAnimationFrame(boardViewState.flashFrameId);
+    }
+
+    const repaint = () => {
+        drawBoard();
+        if (Date.now() < boardViewState.flashUntilMs) {
+            boardViewState.flashFrameId = requestAnimationFrame(repaint);
+            return;
+        }
+
+        boardViewState.flashRows = [];
+        boardViewState.flashFrameId = null;
+        drawBoard();
+    };
+
+    boardViewState.flashFrameId = requestAnimationFrame(repaint);
 };
 
 const getBoardContext = () => {
@@ -230,6 +267,7 @@ const drawHoldTetromino = holdTetromino => {
 const drawBoard = () => {
     const ctx = getBoardContext();
     if (!ctx) return;
+    const nowMs = Date.now();
 
     ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
     drawPlayfieldBackground(ctx);
@@ -248,6 +286,8 @@ const drawBoard = () => {
             drawCell(ctx, block, colorFactory(boardViewState.fallingColor))
         );
     }
+
+    drawFlashOverlay(ctx, nowMs);
 
     ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
     ctx.lineWidth = 2;
@@ -344,4 +384,12 @@ const addUpcomingTetrominoesToBoard = tetrominoesBank => {
 const remapBlocksVisualization = binaryMap => {
     boardViewState.lockedMap = binaryMap.map(row => [...row]);
     drawBoard();
+};
+
+const flashClearedRows = (yPositions, durationMs = 110) => {
+    if (!Array.isArray(yPositions) || !yPositions.length) return;
+
+    boardViewState.flashRows = [...yPositions];
+    boardViewState.flashUntilMs = Date.now() + durationMs;
+    runFlashRedrawLoop();
 };
