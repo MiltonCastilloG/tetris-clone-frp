@@ -14,7 +14,13 @@ const InitGame = ({tetrominoState, mapState, boardState}) => {
             case 'HORIZONTAL':
                 return {...state, tetromino: moveTetrominoHorizontal(action.direction, state)};
             case 'CHANGE_ORIENTATION':
-                return {...state, orientation: changeTetrominoOrientation(state)};
+                return {
+                    ...state,
+                    tetromino: action.rotationKick
+                        ? moveTetrominoByOffset(action.rotationKick, state)
+                        : state.tetromino,
+                    orientation: changeTetrominoOrientation(state)
+                };
             case 'RESTART':
                 return action.newState
             default:
@@ -22,7 +28,8 @@ const InitGame = ({tetrominoState, mapState, boardState}) => {
         }
     }
     const tetromino = redux.createStore(updateTetrominoPosition);
-    const getCurrentTetromino = pipe(tetromino.getState, currentTetromino) 
+    const getCurrentTetromino = pipe(tetromino.getState, currentTetromino)
+    const getTetrominoState = tetromino.getState;
     tetromino.subscribe( pipe(currentTetromino, moveFallingTetromino) )
     
     const updateBinaryMap = (state = mapState, action) => {
@@ -99,7 +106,7 @@ const InitGame = ({tetrominoState, mapState, boardState}) => {
     })
 
     // const exampleScanTicks = ticks.scan(acc=>({top: acc.top + 1}), {top: 1}).map(acc=>({top: acc.top +3})).subscribe(console.log)
-    const actionTicks = ticks.map( pipe(getCurrentTetromino, checkTetrominoCollisionBottom(binaryMapState) ) );
+    const actionTicks = ticks.map(() => checkTetrominoCollisionBottom(binaryMapState)(getTetrominoState()));
     const movementTicks = actionTicks.filter(inBorder => inBorder);
     const landingTicks = actionTicks.filter(inBorder => !inBorder).map( pipe(getCurrentTetromino, checkTetrominoCollisionTop ) )
     const topLanding = landingTicks.filter(topBorder => topBorder);
@@ -129,8 +136,11 @@ const InitGame = ({tetrominoState, mapState, boardState}) => {
     const isDown = event => "ArrowDown" === event.code;
     const isUp = event => "ArrowUp" === event.code;
     const upKeyDowns = keyDowns.filter(isUp)
-    const downKeyDowns = keyDowns.filter(isDown).filter( pipe(getCurrentTetromino, checkTetrominoCollisionBottom(binaryMapState) ) )
-    upKeyDowns.subscribe(() => tetromino.dispatch({ type: 'CHANGE_ORIENTATION'}));
+    const downKeyDowns = keyDowns.filter(isDown).filter(() => checkTetrominoCollisionBottom(binaryMapState)(getTetrominoState()))
+    const safeUpKeyDowns = upKeyDowns
+        .map(() => getValidRotationKick(binaryMapState)(getTetrominoState()))
+        .filter(rotationKick => rotationKick !== null);
+    safeUpKeyDowns.subscribe(rotationKick => tetromino.dispatch({ type: 'CHANGE_ORIENTATION', rotationKick }));
     downKeyDowns.subscribe(()=>tetromino.dispatch({ type: 'DOWN' }))
 
     const isC = event => "KeyC" === event.code;
@@ -153,23 +163,23 @@ const InitGame = ({tetrominoState, mapState, boardState}) => {
     const RIGHT = 1;
     const isLeft = event => "ArrowLeft" === event.code;
     const isRight = event => "ArrowRight" === event.code;
-    const leftKeyDowns = keyDowns.filter(isLeft).filter( pipe(getCurrentTetromino, checkTetrominoCollisionLeft(binaryMapState) ) ).map(() => LEFT)
-    const rightKeyDowns = keyDowns.filter(isRight).filter( pipe(getCurrentTetromino, checkTetrominoCollisionRight(binaryMapState) ) ).map(() => RIGHT);
+    const leftKeyDowns = keyDowns.filter(isLeft).filter(() => checkTetrominoCollisionLeft(binaryMapState)(getTetrominoState())).map(() => LEFT)
+    const rightKeyDowns = keyDowns.filter(isRight).filter(() => checkTetrominoCollisionRight(binaryMapState)(getTetrominoState())).map(() => RIGHT);
     const movements = Stream.merge(leftKeyDowns, rightKeyDowns);
     movements.subscribe(direction => tetromino.dispatch({ type: 'HORIZONTAL', direction: direction }));
 
     const endGame = gameEnded  => {
         if(!gameEnded){
-            Stream.pauseAll(movementTicks, upKeyDowns, movements)
+            Stream.pauseAll(movementTicks, safeUpKeyDowns, movements)
             alert("You lose")
         }
     };
     topLanding.scan(flag=>flag + 1, 0).subscribe(gameEnded=>endGame(gameEnded>1));
     pauseGame.scan(paused => !paused, true)
-    .subscribe(paused=>paused ? Stream.resumeAll(movementTicks, upKeyDowns, movements) : Stream.pauseAll(movementTicks, upKeyDowns, movements));
+    .subscribe(paused=>paused ? Stream.resumeAll(movementTicks, safeUpKeyDowns, movements) : Stream.pauseAll(movementTicks, safeUpKeyDowns, movements));
 
     uploadGame.scan(flag=>flag + 1, 0).subscribe(async ()=>{
-        Stream.pauseAll(movementTicks, upKeyDowns, movements);
+        Stream.pauseAll(movementTicks, safeUpKeyDowns, movements);
         const tetrominoToSave = tetromino.getState();
         const binaryMapTosave = binaryMap.getState();
         const boardDataToSave = boardData.getState();
