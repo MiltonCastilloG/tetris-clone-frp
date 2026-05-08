@@ -1,5 +1,22 @@
 # Next Steps: Canvas Visual Upgrade
 
+## Status Summary
+
+Done:
+- `5` preview migration to canvas (hold + upcoming, PNG dependency removed).
+- `5.1` canonical tetromino definitions + tetromino naming migration.
+- `5.2` collision redesign with projected-state checks and rotation kick handling.
+- `5.3` single upcoming queue canvas (`4x12`), 3 clipped `4x4` slots, `Upcoming` label, flat style.
+- `5.4` side panel readability tuning for score/lines sizing and spacing.
+
+Left:
+- `1` richer board renderer state refactor.
+- `2` responsive playfield sizing.
+- `3` ghost piece rendering.
+- `4` line-clear flash effect.
+- `6` compatibility pass and minimal integration hooks verification.
+- `7` full validation checklist run.
+
 ## Goal
 
 Keep all game logic as-is, and expand visuals by:
@@ -73,8 +90,8 @@ Files:
 Actions:
 - Replace image-background based tetrominoes with small canvases:
   - hold area: one canvas
-  - upcoming area: one canvas per queued tetromino
-- Render from tetromino shape data (same color palette), centered/scaled in preview canvas.
+  - upcoming area: one single queue canvas
+- Render from tetromino shape data using state `0`.
 - Keep current API calls:
   - `addHoldToBoard(holdTetromino)`
   - `addUpcomingTetrominoesToBoard(tetrominoesBank)`
@@ -106,6 +123,31 @@ Files:
 Actions:
 - Rework collision checks to consume tetromino metadata directly.
 - Keep behavior equivalent first, then iterate improvements with tests.
+
+## 5.3) Upcoming preview layout bugfix (single queue canvas)
+
+Files:
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/index.html`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/css/index.css`
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
+
+Actions:
+- Replace multiple upcoming preview canvases with one queue canvas.
+- Use a black queue canvas with logical dimensions `4x12` (grid units), scaled down relative to the main board.
+- Render only the first 3 queued tetrominoes in 3 vertical `4x4` slots.
+- Render tetrominoes with flat solid cells and hard-clip each slot to prevent overlap.
+- Add an `Upcoming` label in the panel.
+- Keep hold preview as its own canvas using the same flat style on a `4x4` logical grid.
+- Keep current API call `addUpcomingTetrominoesToBoard(tetrominoesBank)` and adapt internals only.
+
+## 5.4) Side panel readability tuning
+
+Files:
+- `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/css/index.css`
+
+Actions:
+- Reduce empty space and tune score/lines typography scale.
+- Keep labels compact and values readable without oversized text.
 
 ## 6) Keep compatibility with existing flow
 
