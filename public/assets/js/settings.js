@@ -22,5 +22,6 @@ const HOLD_TETROMINO_CLASS = "js-hold-tetromino";
 const SCORE_CLASS = "js-score";
 const LINE_SCORE_CLASS = "js-lines-score";
 const UPCOMMING_TETROMINOES = "js-upcomming-tetrominoes";
+const UPCOMMING_TETROMINO_QUEUE = "js-upcomming-tetromino-queue";
 
 const BASE_ERASE_SCORE = [40, 100, 300, 400];
