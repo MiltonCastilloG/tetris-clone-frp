@@ -22,8 +22,8 @@ body{
     margin: 50px;
 }
 .hold-tetromino{
-    width: 150px;
-    height: 150px;
+    width: 90px;
+    height: 90px;
     display: block;
     background-color: #090b10;
 }
@@ -33,9 +33,16 @@ body{
     background-color: black;
     margin: 50px;
 }
+.score-container h3 {
+    margin: 6px 0 2px;
+    font-size: clamp(14px, 1.4vw, 16px);
+}
 .score {
     color: white;
     text-align: center;
+    margin: 0 0 6px;
+    font-size: clamp(20px, 2.4vw, 28px);
+    line-height: 1.1;
 }
 .upcomming-tetrominoes-container {
     width: 180px;
@@ -43,13 +50,12 @@ body{
     background-color: black;
     margin: 50px;
 }
-.upcomming {
-    width: 150px;
-    height: 150px;
-    margin-top:10px; 
-    margin-bottom:20px; 
+.upcomming-queue {
+    width: 90px;
+    height: 270px;
+    margin: 10px auto;
     display: block;
-    background-color: #090b10;
+    background-color: #000;
 }
 .row-container{
     display: flex;
