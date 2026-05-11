@@ -24,5 +24,6 @@ const moveTetrominoHorizontal = (direction, { tetromino }) => tetromino.map(form
 const moveTetrominoDown = ({ tetromino }) => tetromino.map(form => form.map(block => ({ ...block, y: block.y + 1 })));
 const moveTetrominoByOffset = ({ dx = 0, dy = 0 }, { tetromino }) =>
     tetromino.map(form => form.map(block => ({ ...block, x: block.x + dx, y: block.y + dy })));
-const changeTetrominoOrientation = ({ tetromino, orientation }) => orientation < tetromino.length - 1 ? orientation + 1 : 0;
+const changeTetrominoOrientation = ({ tetromino, orientation }, rotationDirection = 1) =>
+    (orientation + rotationDirection + tetromino.length) % tetromino.length;
 const currentTetromino = ({ tetromino, orientation }) => tetromino[orientation];

@@ -29,19 +29,19 @@ body{
 }
 .score-container {
     width: 180px;
-    height: 280px;
+    height: 180px;
     background-color: black;
     margin: 50px;
+    padding: 8px 0 4px;
+    box-sizing: border-box;
 }
 .score-container h3 {
-    margin: 6px 0 2px;
-    font-size: clamp(14px, 1.4vw, 16px);
+    margin: 2px 0 0;
 }
 .score {
     color: white;
     text-align: center;
-    margin: 0 0 6px;
-    font-size: clamp(20px, 2.4vw, 28px);
+    margin: 0 0 2px;
     line-height: 1.1;
 }
 .upcomming-tetrominoes-container {
@@ -65,6 +65,15 @@ body{
 .column-container{
     display: flex;
     flex-direction: column;
+    margin: 0;
+    padding: 10px 0 0 0;
+    align-items: center;
+    gap: 15px;
+}
+/* UA default margins on headings look like "column-container padding"; strip them */
+.column-container > h2,
+.column-container > h3 {
+    margin: 0;
 }
 h3{
     color: white;

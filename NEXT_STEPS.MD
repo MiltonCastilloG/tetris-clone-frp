@@ -3,20 +3,21 @@
 ## Status Summary
 
 Done:
+- `4` Improve lock delay/floor rotation and implement line-clear flash
 - `5` preview migration to canvas (hold + upcoming, PNG dependency removed).
 - `5.1` canonical tetromino definitions + tetromino naming migration.
 - `5.2` collision redesign with projected-state checks and rotation kick handling.
 - `5.3` single upcoming queue canvas (`4x12`), 3 clipped `4x4` slots, `Upcoming` label, flat style.
 - `5.4` side panel readability tuning for score/lines sizing and spacing.
+- `7` key controls remap pass (`ArrowUp` hard drop, `Space` alias, `KeyA/KeyS` rotations, `ArrowDown` immediate floor settle).
 
 Left:
 - `1` richer board renderer state refactor.
 - `2` responsive playfield sizing.
 - `3` ghost piece rendering.
-- `4` line-clear flash effect.
+- `5.5` make a 1/2 tick pause when a piece lands
 - `6` compatibility pass and minimal integration hooks verification.
-- `7` full validation checklist run.
-- `8` key controls pass (focus: down input bypasses lock-delay wait).
+- `8` full validation checklist run.
 
 ## Goal
 
@@ -58,6 +59,9 @@ Actions:
 
 File:
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
+
+Status:
+- Pending. Blocks validation item `Ghost always matches actual landing position` in step `8`.
 
 Actions:
 - Compute ghost from current falling blocks + locked map:
@@ -154,6 +158,8 @@ Actions:
 - Reduce empty space and tune score/lines typography scale.
 - Keep labels compact and values readable without oversized text.
 
+## 5.5) make a 1/2 tick pause when a piece lands
+
 ## 6) Keep compatibility with existing flow
 
 Files:
@@ -171,19 +177,19 @@ Files:
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/game.js`
 
 Actions:
-- Review active key mappings and behaviors (`ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Space`, `KeyC`).
-- Make `ArrowDown` movement bypass ground lock-delay wait (immediate settle behavior once piece reaches floor).
-- Ensure `ArrowDown` behavior stays consistent with manual drop expectations and does not regress scoring/line clear flow.
+- Review active key mappings and behaviors (`ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Space`, `KeyC`) to a new mapping (MovementLeft `ArrowLeft`, MovementRight `ArrowRight`, MovementDown `ArrowDown`, HardDrop `ArrowUp`, Hold `KeyC`, RotateLeft `KeyA`, rotateRight `KeyS`)
+- Make MovementDown `ArrowDown` movement bypass ground lock-delay wait (immediate settle behavior once piece reaches floor).
+- Ensure MovementDown `ArrowDown` behavior stays consistent with manual drop expectations and does not regress scoring/line clear flow.
 
 ## 8) Validation checklist
 
-- Game controls work correctly
-- collisions unchanged.
-- Hold/swap still works.
-- Queue updates correctly.
-- Ghost always matches actual landing position.
-- Flash appears only on cleared lines.
-- Playfield and previews stay crisp on DPR screens and resize correctly.
+- [x] Game controls work correctly (mapping updated in code).
+- [~] collisions unchanged (collision API paths unchanged; gameplay run still pending).
+- [~] Hold/swap still works (flow unchanged; gameplay run still pending).
+- [~] Queue updates correctly (update call unchanged; gameplay run still pending).
+- [ ] Ghost always matches actual landing position (blocked: ghost rendering not implemented yet).
+- [x] Flash appears only on cleared lines (triggered only when `linesToErase.length > 0`).
+- [~] Playfield and previews stay crisp on DPR screens and resize correctly (DPR scaling present; responsive resize work still pending in step `2`).
 
 ## Suggested execution order
 

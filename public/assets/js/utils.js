@@ -38,7 +38,7 @@ const ROTATION_KICKS = [
 const projectTetrominoMovement = (state, movement) => {
     const orientationLen = state.tetromino.length;
     const orientation = movement.rotate
-        ? (state.orientation + 1) % orientationLen
+        ? (state.orientation + (movement.rotationDirection || 1) + orientationLen) % orientationLen
         : state.orientation;
 
     return state.tetromino[orientation].map(block => ({
@@ -52,10 +52,10 @@ const checkTetrominoCollisionRight = getBinaryMap => tetrominoState =>
     checkBlocksCollision(projectTetrominoMovement(tetrominoState, { dx: 1 }), getBinaryMap());
 const checkTetrominoCollisionLeft = getBinaryMap => tetrominoState =>
     checkBlocksCollision(projectTetrominoMovement(tetrominoState, { dx: -1 }), getBinaryMap());
-const getValidRotationKick = getBinaryMap => tetrominoState => {
+const getValidRotationKick = (getBinaryMap, rotationDirection = 1) => tetrominoState => {
     const binaryMap = getBinaryMap();
     for (const kick of ROTATION_KICKS) {
-        const projectedBlocks = projectTetrominoMovement(tetrominoState, { rotate: true, ...kick });
+        const projectedBlocks = projectTetrominoMovement(tetrominoState, { rotate: true, rotationDirection, ...kick });
         if (checkBlocksCollision(projectedBlocks, binaryMap)) return kick;
     }
     return null;
