@@ -1,101 +1,101 @@
-body{
-    background-image: url('../img/tetris-wall.jpg');
-    background-size: cover;
-    background-position: center;
+body {
+  background-image: url('../img/tetris-wall.jpg');
+  background-size: cover;
+  background-position: center;
 }
 .block {
-    position: absolute;
+  position: absolute;
 }
 .container {
-    display: flex;
-    justify-content: center;
+  display: flex;
+  justify-content: center;
 }
 .board {
-    width: 300px;
-    height: 600px;
-    background-color: black;
+  width: 300px;
+  height: 600px;
+  background-color: black;
 }
 .hold-tetromino-container {
-    width: 180px;
-    height: 170px;
-    background-color: black;
-    margin: 50px;
+  width: 180px;
+  height: 170px;
+  background-color: black;
+  margin: 50px;
 }
-.hold-tetromino{
-    width: 90px;
-    height: 90px;
-    display: block;
-    background-color: #090b10;
+.hold-tetromino {
+  width: 90px;
+  height: 90px;
+  display: block;
+  background-color: #090b10;
 }
 .score-container {
-    width: 180px;
-    height: 180px;
-    background-color: black;
-    margin: 50px;
-    padding: 8px 0 4px;
-    box-sizing: border-box;
+  width: 180px;
+  height: 180px;
+  background-color: black;
+  margin: 50px;
+  padding: 8px 0 4px;
+  box-sizing: border-box;
 }
 .score-container h3 {
-    margin: 2px 0 0;
+  margin: 2px 0 0;
 }
 .score {
-    color: white;
-    text-align: center;
-    margin: 0 0 2px;
-    line-height: 1.1;
+  color: white;
+  text-align: center;
+  margin: 0 0 2px;
+  line-height: 1.1;
 }
 .upcomming-tetrominoes-container {
-    width: 180px;
-    height: 300px;
-    background-color: black;
-    margin: 50px;
+  width: 180px;
+  height: 300px;
+  background-color: black;
+  margin: 50px;
 }
 .upcomming-queue {
-    width: 90px;
-    height: 270px;
-    margin: 10px auto;
-    display: block;
-    background-color: #000;
+  width: 90px;
+  height: 270px;
+  margin: 10px auto;
+  display: block;
+  background-color: #000;
 }
-.row-container{
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+.row-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
-.column-container{
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 10px 0 0 0;
-    align-items: center;
-    gap: 15px;
+.column-container {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 10px 0 0 0;
+  align-items: center;
+  gap: 15px;
 }
 /* UA default margins on headings look like "column-container padding"; strip them */
 .column-container > h2,
 .column-container > h3 {
-    margin: 0;
+  margin: 0;
 }
-h3{
-    color: white;
-    text-align: center;
+h3 {
+  color: white;
+  text-align: center;
 }
-.board-btn{
-    height: 50px;
-    width: 50px;
-    margin: 20px;
-    background-size: cover;
+.board-btn {
+  height: 50px;
+  width: 50px;
+  margin: 20px;
+  background-size: cover;
 }
-.pause-btn{ 
-    background-image: url("../img/play_pause.png");
+.pause-btn {
+  background-image: url('../img/play_pause.png');
 }
-.upload-game-btn{
-    background-image: url("../img/upload-cloud.png");
+.upload-game-btn {
+  background-image: url('../img/upload-cloud.png');
 }
-.initial-btn{
-    height: 200px;
-    width: 200px;
-    margin: 50px;
+.initial-btn {
+  height: 200px;
+  width: 200px;
+  margin: 50px;
 }
-.game-hash{
-    margin-bottom: 5px;
+.game-hash {
+  margin-bottom: 5px;
 }

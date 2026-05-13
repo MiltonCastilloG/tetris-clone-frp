@@ -3,6 +3,7 @@
 ## Status Summary
 
 Done:
+
 - `4` Improve lock delay/floor rotation and implement line-clear flash
 - `5` preview migration to canvas (hold + upcoming, PNG dependency removed).
 - `5.1` canonical tetromino definitions + tetromino naming migration.
@@ -12,12 +13,16 @@ Done:
 - `7` key controls remap pass (`ArrowUp` hard drop, `Space` alias, `KeyA/KeyS` rotations, `ArrowDown` immediate floor settle).
 
 Left:
+
 - `1` richer board renderer state refactor.
 - `2` responsive playfield sizing.
 - `3` ghost piece rendering.
 - `5.5` make a 1/2 tick pause when a piece lands
 - `6` compatibility pass and minimal integration hooks verification.
 - `8` full validation checklist run.
+- `9` replace const-only `Array.from(...).forEach` index loops in `board.js` with `for...of` (or `for...in` only where index keys matter and style agrees).
+- `10` second pass on `public/assets/js/lib/stream.js`: review `{ value }` holder pattern for `scan` / `withLatestFrom`; keep semantics, simplify or document if a cleaner const-only shape exists.
+- `11` re-enable `no-undef` and `no-unused-vars` for client scripts (ESLint currently turns them off under `public/**/*.js`); likely needs modules (`import`/`export`) or explicit `globals` / bundle entry so globals from `index.html` script order are typed.
 
 ## Goal
 
@@ -31,9 +36,11 @@ Keep all game logic as-is, and expand visuals by:
 ## 1) Refactor `board.js` into a richer renderer state
 
 File:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 
 Actions:
+
 - Extend render state to include:
   - `lockedMap`
   - `fallingBlocks`, `fallingColor`
@@ -45,10 +52,12 @@ Actions:
 ## 2) Add responsive playfield sizing (runtime-light)
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/css/index.css`
 
 Actions:
+
 - Keep abstract grid dimensions (10x20) unchanged.
 - Compute a display scale based on viewport/container limits.
 - Update canvas CSS size + backing buffer with DPR.
@@ -58,12 +67,15 @@ Actions:
 ## 3) Implement ghost piece rendering
 
 File:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 
 Status:
+
 - Pending. Blocks validation item `Ghost always matches actual landing position` in step `8`.
 
 Actions:
+
 - Compute ghost from current falling blocks + locked map:
   - simulate downward movement until next step collides.
 - Draw order:
@@ -76,11 +88,13 @@ Actions:
 ## 4) Improve lock delay/floor rotation and implement line-clear flash
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/game.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/utils.js`
 
 Actions:
+
 - Add lock delay of `1` gravity tick before ground settle.
 - Reset lock delay on successful left/right/rotate movement, capped at `15` resets.
 - Ensure floor-aware rotation kick (including upward kick) counts as movement for lock-delay reset.
@@ -92,11 +106,13 @@ Actions:
 ## 5) Replace tetromino previews with canvas
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/index.html`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/css/index.css`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 
 Actions:
+
 - Replace image-background based tetrominoes with small canvases:
   - hold area: one canvas
   - upcoming area: one single queue canvas
@@ -109,6 +125,7 @@ Actions:
 ## 5.1) Canonical tetromino definitions and gameplay source migration
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/lib/tetromino-definitions.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/tetromino.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/lib/tetrominoes.js`
@@ -116,6 +133,7 @@ Files:
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 
 Actions:
+
 - Rename `tetronimo*` terminology to `tetromino*` across file names and symbols.
 - Use string color names as canonical IDs in state and definitions.
 - Define all 4 rotation states explicitly as coordinate arrays in a local 4x4 frame.
@@ -125,22 +143,26 @@ Actions:
 ## 5.2) Collision redesign using tetromino metadata
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/utils.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/tetromino.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/lib/tetromino-definitions.js`
 
 Actions:
+
 - Rework collision checks to consume tetromino metadata directly.
 - Keep behavior equivalent first, then iterate improvements with tests.
 
 ## 5.3) Upcoming preview layout bugfix (single queue canvas)
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/index.html`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/css/index.css`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/board.js`
 
 Actions:
+
 - Replace multiple upcoming preview canvases with one queue canvas.
 - Use a black queue canvas with logical dimensions `4x12` (grid units), scaled down relative to the main board.
 - Render only the first 3 queued tetrominoes in 3 vertical `4x4` slots.
@@ -152,9 +174,11 @@ Actions:
 ## 5.4) Side panel readability tuning
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/css/index.css`
 
 Actions:
+
 - Reduce empty space and tune score/lines typography scale.
 - Keep labels compact and values readable without oversized text.
 
@@ -163,10 +187,12 @@ Actions:
 ## 6) Keep compatibility with existing flow
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/game.js`
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/menu.js`
 
 Actions:
+
 - Ensure current subscriptions and calls still work.
 - Only add minimal hook(s) needed for flash.
 - Preserve existing startup/load behavior.
@@ -174,9 +200,11 @@ Actions:
 ## 7) Key controls pass (lock-delay interactions)
 
 Files:
+
 - `/home/macastillo/Documentos/for_work/repos/tetris-clone-frp/public/assets/js/game.js`
 
 Actions:
+
 - Review active key mappings and behaviors (`ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Space`, `KeyC`) to a new mapping (MovementLeft `ArrowLeft`, MovementRight `ArrowRight`, MovementDown `ArrowDown`, HardDrop `ArrowUp`, Hold `KeyC`, RotateLeft `KeyA`, rotateRight `KeyS`)
 - Make MovementDown `ArrowDown` movement bypass ground lock-delay wait (immediate settle behavior once piece reaches floor).
 - Ensure MovementDown `ArrowDown` behavior stays consistent with manual drop expectations and does not regress scoring/line clear flow.
@@ -191,7 +219,49 @@ Actions:
 - [x] Flash appears only on cleared lines (triggered only when `linesToErase.length > 0`).
 - [~] Playfield and previews stay crisp on DPR screens and resize correctly (DPR scaling present; responsive resize work still pending in step `2`).
 
+## 9) Prefer `for...of` over index `forEach` for grid / queue loops
+
+Files:
+
+- `public/assets/js/board.js`
+
+Context:
+
+- ESLint const-only rule replaced `for (let i …)` with `Array.from({ length: n }, …).forEach(…)`.
+- Prefer explicit `for (const x of …)` (e.g. over a small range iterator or `keys()`-style sequence) instead of `forEach`, unless a callback API is required.
+
+Actions:
+
+- Refactor playfield grid loops (`HORIZONTAL_DIMENSIONS`, `VERTICAL_DIMENSIONS`) and upcoming queue slot index loop (`maxVisible`) to `for...of` (or `for...in` on a dense array of indices if that reads clearer than a generator).
+- Re-run `pnpm lint` after edits.
+
+## 10) `stream.js` const-holder follow-up
+
+Files:
+
+- `public/assets/js/lib/stream.js`
+
+Actions:
+
+- Re-read `scan` and `withLatestFrom` after const-only migration (`acc` / `latest` as `{ value }` objects).
+- Decide whether to keep holders, switch to a single shared cell type, or fold with a tiny helper; document invariants (e.g. `withLatestFrom` may emit before `other` has emitted).
+
+## 11) Real `no-undef` / `no-unused-vars` for client JS
+
+Files:
+
+- `eslint.config.mjs`
+- `public/index.html` (script graph)
+- `public/assets/js/**/*.js`
+
+Actions:
+
+- Pick approach: ESM + one entry (or few) with `import`/`export`, or stay script tags and maintain an `eslint.config.mjs` `languageOptions.globals` block that lists every intentional global from `settings.js` and cross-file exports.
+- Remove the `public/**/*.js` overrides that disable `no-undef` and `no-unused-vars` once accurate.
+- Optionally add `/* exported */` or move to modules so unused exports disappear naturally.
+
 ## Suggested execution order
 
 1. Gameplay canvas upgrades (ghost + flash + responsive board)
 2. Preview migration (hold/upcoming from images to canvas)
+3. Small code-quality pass: items `9` → `10` → `11` when ready (independent of canvas work except touching same files)

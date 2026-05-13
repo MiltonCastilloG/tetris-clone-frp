@@ -4,7 +4,7 @@ const showBoard = () => {
     document.querySelector(".game-container").style.visibility = "visible";
 }
 
-const prepareGame = () =>{
+const prepareGame = () => {
     const tetrominoState = getRandomTetromino();
     const boardState = {
         tetrominoesBank: [getRandomTetromino(),getRandomTetromino(),getRandomTetromino()],

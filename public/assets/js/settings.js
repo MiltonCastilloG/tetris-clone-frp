@@ -11,17 +11,19 @@ for a more expansive representation of data
 */
 const EMPTY_SPACE = 0;
 const FILLED_SPACE = 1;
-const BINARY_MAP_ROW = Array.from({length: HORIZONTAL_DIMENSIONS}, () => 0);
-const BINARY_MAP = Array.from({length: VERTICAL_DIMENSIONS}, ()=>[...BINARY_MAP_ROW]);
-const HORIZONTAL_MOVEMENT = BOARD_WIDTH/HORIZONTAL_DIMENSIONS;
-const VERTICAL_MOVEMENT = BOARD_HEIGHT/VERTICAL_DIMENSIONS;
-const TETROMINO_STARTING_PLACE = HORIZONTAL_DIMENSIONS/2-1
+const BINARY_MAP_ROW = Array.from({ length: HORIZONTAL_DIMENSIONS }, () => 0);
+const BINARY_MAP = Array.from({ length: VERTICAL_DIMENSIONS }, () => [
+  ...BINARY_MAP_ROW,
+]);
+const HORIZONTAL_MOVEMENT = BOARD_WIDTH / HORIZONTAL_DIMENSIONS;
+const VERTICAL_MOVEMENT = BOARD_HEIGHT / VERTICAL_DIMENSIONS;
+const TETROMINO_STARTING_PLACE = HORIZONTAL_DIMENSIONS / 2 - 1;
 
-const FALLING_BLOCK_CLASS = "js-falling-block";
-const HOLD_TETROMINO_CLASS = "js-hold-tetromino";
-const SCORE_CLASS = "js-score";
-const LINE_SCORE_CLASS = "js-lines-score";
-const UPCOMMING_TETROMINOES = "js-upcomming-tetrominoes";
-const UPCOMMING_TETROMINO_QUEUE = "js-upcomming-tetromino-queue";
+const FALLING_BLOCK_CLASS = 'js-falling-block';
+const HOLD_TETROMINO_CLASS = 'js-hold-tetromino';
+const SCORE_CLASS = 'js-score';
+const LINE_SCORE_CLASS = 'js-lines-score';
+const UPCOMMING_TETROMINOES = 'js-upcomming-tetrominoes';
+const UPCOMMING_TETROMINO_QUEUE = 'js-upcomming-tetromino-queue';
 
 const BASE_ERASE_SCORE = [40, 100, 300, 400];
