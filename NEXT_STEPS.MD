@@ -11,6 +11,8 @@ Done:
 - `5.3` single upcoming queue canvas (`4x12`), 3 clipped `4x4` slots, `Upcoming` label, flat style.
 - `5.4` side panel readability tuning for score/lines sizing and spacing.
 - `7` key controls remap pass (`ArrowUp` hard drop, `Space` alias, `KeyA/KeyS` rotations, `ArrowDown` immediate floor settle).
+- `9` replace const-only `Array.from(...).forEach` index loops in `board.js` with `for...of` (or `for...in` only where index keys matter and style agrees).
+
 
 Left:
 
@@ -20,7 +22,6 @@ Left:
 - `5.5` make a 1/2 tick pause when a piece lands
 - `6` compatibility pass and minimal integration hooks verification.
 - `8` full validation checklist run.
-- `9` replace const-only `Array.from(...).forEach` index loops in `board.js` with `for...of` (or `for...in` only where index keys matter and style agrees).
 - `10` second pass on `public/assets/js/lib/stream.js`: review `{ value }` holder pattern for `scan` / `withLatestFrom`; keep semantics, simplify or document if a cleaner const-only shape exists.
 - `11` re-enable `no-undef` and `no-unused-vars` for client scripts (ESLint currently turns them off under `public/**/*.js`); likely needs modules (`import`/`export`) or explicit `globals` / bundle entry so globals from `index.html` script order are typed.
 

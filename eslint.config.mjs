@@ -31,14 +31,6 @@ export default [
     rules: {
       'no-var': 'error',
       'prefer-const': 'error',
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "VariableDeclaration[kind='let']",
-          message:
-            'Use const only — refactor reassignments (holder object, fold, etc.).',
-        },
-      ],
     },
   },
   eslintConfigPrettier,

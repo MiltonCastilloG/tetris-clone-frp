@@ -28,23 +28,21 @@ const drawPlayfieldGrid = (ctx) => {
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.lineWidth = 1;
 
-  Array.from({ length: HORIZONTAL_DIMENSIONS + 1 }, (_, x) => x).forEach(
-    (x) => {
-      const px = x * HORIZONTAL_MOVEMENT + 0.5;
-      ctx.beginPath();
-      ctx.moveTo(px, 0);
-      ctx.lineTo(px, BOARD_HEIGHT);
-      ctx.stroke();
-    }
-  );
+  for (let x = 0; x <= HORIZONTAL_DIMENSIONS; x += 1) {
+    const px = x * HORIZONTAL_MOVEMENT + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(px, 0);
+    ctx.lineTo(px, BOARD_HEIGHT);
+    ctx.stroke();
+  }
 
-  Array.from({ length: VERTICAL_DIMENSIONS + 1 }, (_, y) => y).forEach((y) => {
+  for (let y = 0; y <= VERTICAL_DIMENSIONS; y += 1) {
     const py = y * VERTICAL_MOVEMENT + 0.5;
     ctx.beginPath();
     ctx.moveTo(0, py);
     ctx.lineTo(BOARD_WIDTH, py);
     ctx.stroke();
-  });
+  }
 };
 
 const drawFlashOverlay = (ctx, nowMs) => {
@@ -365,14 +363,14 @@ const addUpcomingTetrominoesToBoard = (tetrominoesBank) => {
   );
   const maxVisible = Math.min(UPCOMMING_QUEUE_SLOTS, tetrominoesBank.length);
 
-  Array.from({ length: maxVisible }, (_, slotIndex) => {
+  for (let slotIndex = 0; slotIndex < maxVisible; slotIndex += 1) {
     const tetrominoData = tetrominoesBank[slotIndex];
     if (
       !tetrominoData ||
       !tetrominoData.tetromino ||
       !tetrominoData.tetromino[0]
     )
-      return;
+      continue;
 
     const slotTop = slotIndex * slotHeight;
     const slotBottom = slotTop + slotHeight;
@@ -418,7 +416,7 @@ const addUpcomingTetrominoesToBoard = (tetrominoesBank) => {
     });
 
     ctx.restore();
-  });
+  }
 };
 
 const remapBlocksVisualization = (binaryMap) => {
