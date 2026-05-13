@@ -1,4 +1,15 @@
 ((global) => {
+  // Mutable ref for closures; withLatestFrom may emit [undefined, y] before `other` has emitted.
+  const mutableRef = (initial) => {
+    let v = initial;
+    return {
+      read: () => v,
+      write: (x) => {
+        v = x;
+      },
+    };
+  };
+
   class Stream {
     constructor(generator) {
       this.paused = false;
@@ -37,22 +48,23 @@
 
     scan(fn, i) {
       return new Stream((next) => {
-        const acc = { value: i };
+        const acc = mutableRef(i);
         this.generator((x) => {
-          acc.value = fn(acc.value, x);
-          next(acc.value);
+          const nextAcc = fn(acc.read(), x);
+          acc.write(nextAcc);
+          next(nextAcc);
         });
       });
     }
 
     withLatestFrom(other) {
       return new Stream((next) => {
-        const latest = { value: undefined };
+        const latest = mutableRef(undefined);
         other.subscribe((x) => {
-          latest.value = x;
+          latest.write(x);
         });
         this.generator((y) => {
-          next([latest.value, y]);
+          next([latest.read(), y]);
         });
       });
     }
