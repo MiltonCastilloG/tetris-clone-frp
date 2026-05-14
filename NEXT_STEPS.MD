@@ -12,9 +12,7 @@ Done:
 - `5.4` side panel readability tuning for score/lines sizing and spacing.
 - `7` key controls remap pass (`ArrowUp` hard drop, `Space` alias, `KeyA/KeyS` rotations, `ArrowDown` immediate floor settle).
 - `9` replace const-only `Array.from(...).forEach` index loops in `board.js` with `for...of` (or `for...in` only where index keys matter and style agrees).
-- `10` second pass on `public/assets/js/lib/stream.js`: review `{ value }` holder pattern for `scan` / `withLatestFrom`; keep semantics, simplify or document if a cleaner const-only shape exists.
-
-
+- `11` native ESM (`import`/`export`, module entry in `index.html`), client split (`config/`, `utils`, `collision`, `api`, `initGame`); ESLint `public/**/*.js` is `sourceType: 'module'` with `no-undef` and `no-unused-vars` enabled.
 
 Left:
 
@@ -24,7 +22,8 @@ Left:
 - `5.5` make a 1/2 tick pause when a piece lands
 - `6` compatibility pass and minimal integration hooks verification.
 - `8` full validation checklist run.
-- `11` re-enable `no-undef` and `no-unused-vars` for client scripts (ESLint currently turns them off under `public/**/*.js`); likely needs modules (`import`/`export`) or explicit `globals` / bundle entry so globals from `index.html` script order are typed.
+- `10` second pass on `public/assets/js/lib/stream.js`: review `mutableRef` holder pattern for `scan` / `withLatestFrom`; keep semantics, simplify or document invariants (e.g. `withLatestFrom` may emit before `other` has emitted).
+- `10.1` bundler / dev-server evaluation: **esbuild** vs **Vite** vs thin **Express** on top of `server.js`; optional prod bundle and HMR; **Nest** / **Next** only if you want a full framework shell.
 
 ## Goal
 
@@ -245,25 +244,33 @@ Files:
 
 Actions:
 
-- Re-read `scan` and `withLatestFrom` after const-only migration (`acc` / `latest` as `{ value }` objects).
+- Re-read `scan` and `withLatestFrom` after const-only migration (`mutableRef` cells for `acc` / `latest`).
 - Decide whether to keep holders, switch to a single shared cell type, or fold with a tiny helper; document invariants (e.g. `withLatestFrom` may emit before `other` has emitted).
 
-## 11) Real `no-undef` / `no-unused-vars` for client JS
+## 11) Real `no-undef` / `no-unused-vars` for client JS — **done**
 
-Files:
+Delivered via native ESM and `eslint.config.mjs` (`sourceType: 'module'` for `public/**/*.js`, `globals.browser`); removed overrides that disabled `no-undef` and `no-unused-vars`. No `settings.js` script-order globals list required.
 
-- `eslint.config.mjs`
-- `public/index.html` (script graph)
-- `public/assets/js/**/*.js`
+
+## 11.1) Bundler / dev server (after ESM baseline)
+
+Status: **pending** — native ESM + existing `server.js` static file serving is the current baseline.
+
+Files (expected once a tool is chosen):
+
+- `package.json` / lockfile
+- `public/index.html` (script `src` if build output path changes)
+- optional: `server.js` or a small wrapper if `/upload/game` and `/fetch/game` stay on Node while static assets are served by Vite middleware
 
 Actions:
 
-- Pick approach: ESM + one entry (or few) with `import`/`export`, or stay script tags and maintain an `eslint.config.mjs` `languageOptions.globals` block that lists every intentional global from `settings.js` and cross-file exports.
-- Remove the `public/**/*.js` overrides that disable `no-undef` and `no-unused-vars` once accurate.
-- Optionally add `/* exported */` or move to modules so unused exports disappear naturally.
+- Compare **esbuild** (CLI or programmatic) vs **Vite** for dev + production build.
+- Optionally add a minimal **Express** app that serves `public/` and proxies or implements the same JSON save/load routes instead of hand-rolled `http`; **Nest** / **Next** are heavier than this repo usually needs.
+- Keep game source as ESM modules; bundler should mainly change how assets are delivered (and optionally minify).
+- Document chosen commands (e.g. `pnpm dev`, `pnpm build`) and output directory for deployment.
 
 ## Suggested execution order
 
 1. Gameplay canvas upgrades (ghost + flash + responsive board)
 2. Preview migration (hold/upcoming from images to canvas)
-3. Small code-quality pass: items `9` → `10` → `11` when ready (independent of canvas work except touching same files)
+3. Small code-quality pass: items `9` (done) → `10` → `10.1` when ready (independent of canvas work except touching same files)

@@ -27,7 +27,7 @@ export const createFreshGamePayload = () => {
     scoreByErasedLines: BASE_ERASE_SCORE,
     lockHold: false,
   };
-  const mapState = [...BINARY_MAP];
+  const mapState = structuredClone(BINARY_MAP);
   addTetrominoToBoard(tetrominoState);
   return { tetrominoState, mapState, boardState };
 };
