@@ -19,12 +19,8 @@ export default [
     files: ['public/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
-      sourceType: 'script',
+      sourceType: 'module',
       globals: { ...globals.browser },
-    },
-    rules: {
-      'no-undef': 'off',
-      'no-unused-vars': 'off',
     },
   },
   {

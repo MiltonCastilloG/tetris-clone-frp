@@ -1,4 +1,35 @@
-const { Stream, redux } = window;
+import { INTIAL_CLOCK_SPEED, BINARY_MAP_ROW } from './config/settings.js';
+import { Stream } from './lib/stream.js';
+import { redux } from './lib/redux.js';
+import { pipe, eraseLines } from './utils.js';
+import {
+  checkTetrominoCollisionBottom,
+  checkTetrominoCollisionLeft,
+  checkTetrominoCollisionRight,
+  checkTetrominoCollisionTop,
+  getValidRotationKick,
+} from './collision.js';
+import {
+  moveTetrominoDown,
+  moveTetrominoHorizontal,
+  moveTetrominoByOffset,
+  changeTetrominoOrientation,
+  currentTetromino,
+  getRandomTetromino,
+  getSpecificTetromino,
+} from './tetromino.js';
+import {
+  moveFallingTetromino,
+  updateTetrominoColor,
+  addTetrominoToBoard,
+  removeFallingBlocks,
+  addHoldToBoard,
+  addScoreToBoard,
+  addUpcomingTetrominoesToBoard,
+  remapBlocksVisualization,
+  flashClearedRows,
+} from './board.js';
+import { fetchForUpload } from './api.js';
 
 const ticks = new Stream((next) => setInterval(next, INTIAL_CLOCK_SPEED));
 const keyDowns = new Stream((next) =>
@@ -13,7 +44,7 @@ const uploadGame = new Stream((next) =>
 const LOCK_DELAY_TICKS = 2;
 const LOCK_DELAY_RESET_CAP = 15;
 
-const InitGame = ({ tetrominoState, mapState, boardState }) => {
+export const InitGame = ({ tetrominoState, mapState, boardState }) => {
   const lockDelayState = {
     active: false,
     ticksRemaining: 0,
@@ -189,7 +220,7 @@ const InitGame = ({ tetrominoState, mapState, boardState }) => {
       });
 
     remapBlocksVisualization(binaryMapState());
-    addTetrominoToBoard(newTetromino, FALLING_BLOCK_CLASS);
+    addTetrominoToBoard(newTetromino);
   };
   const settleCurrentTetrominoIfSafe = () => {
     if (!isCurrentTetrominoInTopCollision()) {
@@ -197,7 +228,6 @@ const InitGame = ({ tetrominoState, mapState, boardState }) => {
     }
   };
 
-  // const exampleScanTicks = ticks.scan(acc=>({top: acc.top + 1}), {top: 1}).map(acc=>({top: acc.top +3})).subscribe(console.log)
   const actionTicks = ticks.map(canCurrentTetrominoMoveDown);
   const movementTicks = actionTicks.filter((inBorder) => inBorder);
   const landingTicks = actionTicks

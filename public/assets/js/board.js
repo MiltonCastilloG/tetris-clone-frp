@@ -1,3 +1,21 @@
+import {
+  BINARY_MAP,
+  BOARD_WIDTH,
+  BOARD_HEIGHT,
+  HORIZONTAL_DIMENSIONS,
+  VERTICAL_DIMENSIONS,
+  HORIZONTAL_MOVEMENT,
+  VERTICAL_MOVEMENT,
+} from './config/settings.js';
+import {
+  HOLD_TETROMINO_CLASS,
+  SCORE_CLASS,
+  LINE_SCORE_CLASS,
+  UPCOMMING_TETROMINO_QUEUE,
+} from './config/selectors.js';
+import { isSpaceFilled } from './utils.js';
+import { colorFactory } from './lib/tetrominoes.js';
+
 const getBoardCanvas = () => document.querySelector('.js-board');
 
 const boardViewState = {
@@ -9,7 +27,6 @@ const boardViewState = {
   flashFrameId: null,
 };
 const PREVIEW_FALLBACK_SIZE = 150;
-const PREVIEW_PADDING_RATIO = 0.16;
 const HOLD_GRID_COLUMNS = 4;
 const HOLD_GRID_ROWS = 4;
 const UPCOMMING_QUEUE_COLUMNS = 4;
@@ -147,82 +164,12 @@ const getPreviewContext = (canvas) => {
   return { ctx, width, height };
 };
 
-const drawPreviewCell = (ctx, left, top, size, color) => {
-  const inset = Math.max(1, Math.floor(size * 0.08));
-  const width = Math.max(1, size - inset * 2);
-  const height = Math.max(1, size - inset * 2);
-  const x = left + inset;
-  const y = top + inset;
-
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, width, height);
-
-  const shade = ctx.createLinearGradient(x, y, x, y + height);
-  shade.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-  shade.addColorStop(1, 'rgba(0, 0, 0, 0.18)');
-  ctx.fillStyle = shade;
-  ctx.fillRect(x, y, width, height);
-
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-  ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
-};
-
-const drawPreviewBackground = (ctx, width, height) => {
-  ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = '#090b10';
-  ctx.fillRect(0, 0, width, height);
-};
-
 const drawFlatPreviewCell = (ctx, left, top, size, color) => {
   const inset = Math.max(1, Math.floor(size * 0.08));
   const width = Math.max(1, size - inset * 2);
   const height = Math.max(1, size - inset * 2);
   ctx.fillStyle = color;
   ctx.fillRect(left + inset, top + inset, width, height);
-};
-
-const drawTetrominoPreview = (canvas, tetrominoData) => {
-  const preview = getPreviewContext(canvas);
-  if (!preview) return;
-  const { ctx, width, height } = preview;
-  drawPreviewBackground(ctx, width, height);
-  if (!tetrominoData || !tetrominoData.tetromino || !tetrominoData.tetromino[0])
-    return;
-
-  const previewBlocks = tetrominoData.tetromino[0];
-  if (!previewBlocks.length) return;
-
-  const xs = previewBlocks.map((block) => block.x);
-  const ys = previewBlocks.map((block) => block.y);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  const pieceWidth = maxX - minX + 1;
-  const pieceHeight = maxY - minY + 1;
-
-  const availableWidth = width * (1 - PREVIEW_PADDING_RATIO * 2);
-  const availableHeight = height * (1 - PREVIEW_PADDING_RATIO * 2);
-  const cellSize = Math.floor(
-    Math.min(availableWidth / pieceWidth, availableHeight / pieceHeight)
-  );
-  const renderedWidth = pieceWidth * cellSize;
-  const renderedHeight = pieceHeight * cellSize;
-  const offsetX = Math.floor((width - renderedWidth) / 2);
-  const offsetY = Math.floor((height - renderedHeight) / 2);
-  const color = colorFactory(tetrominoData.color);
-
-  previewBlocks.forEach(({ x, y }) => {
-    const previewX = x - minX;
-    const previewY = y - minY;
-    drawPreviewCell(
-      ctx,
-      offsetX + previewX * cellSize,
-      offsetY + previewY * cellSize,
-      cellSize,
-      color
-    );
-  });
 };
 
 const drawHoldTetromino = (holdTetromino) => {
@@ -282,7 +229,7 @@ const drawHoldTetromino = (holdTetromino) => {
   ctx.restore();
 };
 
-const drawBoard = () => {
+export const drawBoard = () => {
   const ctx = getBoardContext();
   if (!ctx) return;
   const nowMs = Date.now();
@@ -312,17 +259,17 @@ const drawBoard = () => {
   ctx.strokeRect(1, 1, BOARD_WIDTH - 2, BOARD_HEIGHT - 2);
 };
 
-const moveFallingTetromino = (tetromino) => {
+export const moveFallingTetromino = (tetromino) => {
   boardViewState.fallingBlocks = tetromino.map((block) => ({ ...block }));
   drawBoard();
 };
 
-const updateTetrominoColor = (color) => {
+export const updateTetrominoColor = (color) => {
   boardViewState.fallingColor = color;
   drawBoard();
 };
 
-const addTetrominoToBoard = ({ tetromino, orientation, color }) => {
+export const addTetrominoToBoard = ({ tetromino, orientation, color }) => {
   boardViewState.fallingBlocks = tetromino[orientation].map((block) => ({
     ...block,
   }));
@@ -330,20 +277,20 @@ const addTetrominoToBoard = ({ tetromino, orientation, color }) => {
   drawBoard();
 };
 
-const removeFallingBlocks = () => {
+export const removeFallingBlocks = () => {
   boardViewState.fallingBlocks = [];
   boardViewState.fallingColor = null;
   drawBoard();
 };
 
-const addHoldToBoard = (holdTetromino) => {
+export const addHoldToBoard = (holdTetromino) => {
   drawHoldTetromino(holdTetromino);
 };
-const addScoreToBoard = (score, lineScore) => {
+export const addScoreToBoard = (score, lineScore) => {
   document.querySelector(`.${SCORE_CLASS}`).textContent = score;
   document.querySelector(`.${LINE_SCORE_CLASS}`).textContent = lineScore;
 };
-const addUpcomingTetrominoesToBoard = (tetrominoesBank) => {
+export const addUpcomingTetrominoesToBoard = (tetrominoesBank) => {
   const queueCanvas = document.querySelector(`.${UPCOMMING_TETROMINO_QUEUE}`);
   const queuePreview = getPreviewContext(queueCanvas);
   if (!queuePreview) return;
@@ -419,12 +366,12 @@ const addUpcomingTetrominoesToBoard = (tetrominoesBank) => {
   }
 };
 
-const remapBlocksVisualization = (binaryMap) => {
+export const remapBlocksVisualization = (binaryMap) => {
   boardViewState.lockedMap = binaryMap.map((row) => [...row]);
   drawBoard();
 };
 
-const flashClearedRows = (yPositions, durationMs = 110) => {
+export const flashClearedRows = (yPositions, durationMs = 110) => {
   if (!Array.isArray(yPositions) || !yPositions.length) return;
 
   boardViewState.flashRows = [...yPositions];

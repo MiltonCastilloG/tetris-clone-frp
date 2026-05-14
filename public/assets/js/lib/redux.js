@@ -1,37 +1,33 @@
-((global) => {
-  const { Stream } = global;
+import { Stream } from './stream.js';
 
-  class WritableStream extends Stream {
-    constructor() {
-      super((next) => {
-        this._next = next;
-      });
-    }
-
-    write(x) {
-      this._next(x);
-    }
+class WritableStream extends Stream {
+  constructor() {
+    super((next) => {
+      this._next = next;
+    });
   }
 
-  const redux = {
-    createStore: (reducer) => {
-      const inputs = new WritableStream();
-      const state = inputs.scan(reducer);
+  write(x) {
+    this._next(x);
+  }
+}
 
-      return {
-        subscribe: (fn) => {
-          state.subscribe(fn);
-          inputs.write(() => {});
-        },
-        dispatch: (action) => {
-          inputs.write(action);
-        },
-        getState: () => {
-          return state.getLast();
-        },
-      };
-    },
-  };
+export const redux = {
+  createStore: (reducer) => {
+    const inputs = new WritableStream();
+    const state = inputs.scan(reducer);
 
-  global.redux = redux;
-})(window);
+    return {
+      subscribe: (fn) => {
+        state.subscribe(fn);
+        inputs.write(() => {});
+      },
+      dispatch: (action) => {
+        inputs.write(action);
+      },
+      getState: () => {
+        return state.getLast();
+      },
+    };
+  },
+};

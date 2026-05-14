@@ -1,3 +1,6 @@
+import { TETROMINO_DEFINITIONS } from './lib/tetromino-definitions.js';
+import { TETROMINO_COLORS } from './lib/tetrominoes.js';
+
 const translateStateBlocks = ({ blocks, offsetX = 0 }, spawnAnchor) =>
   blocks.map((block) => ({
     x: block.x + spawnAnchor.x + offsetX,
@@ -16,26 +19,32 @@ const getNewTetromino = (definition) => ({
   orientation: 0,
 });
 
-const getRandomTetromino = () => {
+export const getRandomTetromino = () => {
   const color =
     TETROMINO_COLORS[Math.floor(Math.random() * TETROMINO_COLORS.length)];
   return getNewTetromino(TETROMINO_DEFINITIONS[color]);
 };
 
-const getSpecificTetromino = (color) =>
+export const getSpecificTetromino = (color) =>
   getNewTetromino(TETROMINO_DEFINITIONS[color]);
-const moveTetrominoHorizontal = (direction, { tetromino }) =>
+
+export const moveTetrominoHorizontal = (direction, { tetromino }) =>
   tetromino.map((form) =>
     form.map((block) => ({ ...block, x: block.x + direction }))
   );
-const moveTetrominoDown = ({ tetromino }) =>
+
+export const moveTetrominoDown = ({ tetromino }) =>
   tetromino.map((form) => form.map((block) => ({ ...block, y: block.y + 1 })));
-const moveTetrominoByOffset = ({ dx = 0, dy = 0 }, { tetromino }) =>
+
+export const moveTetrominoByOffset = ({ dx = 0, dy = 0 }, { tetromino }) =>
   tetromino.map((form) =>
     form.map((block) => ({ ...block, x: block.x + dx, y: block.y + dy }))
   );
-const changeTetrominoOrientation = (
+
+export const changeTetrominoOrientation = (
   { tetromino, orientation },
   rotationDirection = 1
 ) => (orientation + rotationDirection + tetromino.length) % tetromino.length;
-const currentTetromino = ({ tetromino, orientation }) => tetromino[orientation];
+
+export const currentTetromino = ({ tetromino, orientation }) =>
+  tetromino[orientation];

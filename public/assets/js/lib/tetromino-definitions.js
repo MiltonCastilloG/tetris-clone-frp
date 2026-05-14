@@ -1,4 +1,4 @@
-const TETROMINO_DEFINITIONS = {
+export const TETROMINO_DEFINITIONS = {
   yellow: {
     color: 'yellow',
     spawnAnchor: { x: 4, y: 0 },
