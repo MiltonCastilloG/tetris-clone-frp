@@ -8,7 +8,7 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['server.js'],
+    files: ['server.js', 'dev_utils/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
