@@ -3,15 +3,15 @@ import { isSpaceFilled } from './utils.js';
 const checkTopBorder = ({ y }) => y <= 0;
 
 const booleanReducer = (acc, value) => acc && value;
-export const checkBlocksCollision = (blocks, binaryMap) =>
+export const checkBlocksCollision = (blocks, lockedMap) =>
   blocks
     .map(
       ({ y, x }) =>
         y >= 0 &&
-        y < binaryMap.length &&
+        y < lockedMap.length &&
         x >= 0 &&
-        x < binaryMap[0].length &&
-        !isSpaceFilled(binaryMap[y][x])
+        x < lockedMap[0].length &&
+        !isSpaceFilled(lockedMap[y][x])
     )
     .reduce(booleanReducer, true);
 
@@ -38,34 +38,34 @@ export const projectTetrominoMovement = (state, movement) => {
 };
 
 export const checkTetrominoCollisionBottom =
-  (getBinaryMap) => (tetrominoState) =>
+  (getLockedMap) => (tetrominoState) =>
     checkBlocksCollision(
       projectTetrominoMovement(tetrominoState, { dy: 1 }),
-      getBinaryMap()
+      getLockedMap()
     );
 export const checkTetrominoCollisionRight =
-  (getBinaryMap) => (tetrominoState) =>
+  (getLockedMap) => (tetrominoState) =>
     checkBlocksCollision(
       projectTetrominoMovement(tetrominoState, { dx: 1 }),
-      getBinaryMap()
+      getLockedMap()
     );
-export const checkTetrominoCollisionLeft = (getBinaryMap) => (tetrominoState) =>
+export const checkTetrominoCollisionLeft = (getLockedMap) => (tetrominoState) =>
   checkBlocksCollision(
     projectTetrominoMovement(tetrominoState, { dx: -1 }),
-    getBinaryMap()
+    getLockedMap()
   );
 
 export const getValidRotationKick =
-  (getBinaryMap, rotationDirection = 1) =>
+  (getLockedMap, rotationDirection = 1) =>
   (tetrominoState) => {
-    const binaryMap = getBinaryMap();
+    const lockedMap = getLockedMap();
     for (const kick of ROTATION_KICKS) {
       const projectedBlocks = projectTetrominoMovement(tetrominoState, {
         rotate: true,
         rotationDirection,
         ...kick,
       });
-      if (checkBlocksCollision(projectedBlocks, binaryMap)) return kick;
+      if (checkBlocksCollision(projectedBlocks, lockedMap)) return kick;
     }
     return null;
   };

@@ -1,5 +1,5 @@
 import {
-  BINARY_MAP,
+  LOCKED_MAP,
   BOARD_WIDTH,
   BOARD_HEIGHT,
   HORIZONTAL_DIMENSIONS,
@@ -19,8 +19,8 @@ import { colorFactory } from './lib/tetrominoes.js';
 const getBoardCanvas = () => document.querySelector('.js-board');
 
 const boardViewState = {
-  lockedMap: BINARY_MAP.map((row) => [...row]),
-  fallingBlocks: [],
+  lockedMap: LOCKED_MAP.map((row) => [...row]),
+  fallingPiece: [],
   fallingColor: null,
   flashRows: [],
   flashUntilMs: 0,
@@ -247,7 +247,7 @@ export const drawBoard = () => {
   });
 
   if (boardViewState.fallingColor) {
-    boardViewState.fallingBlocks.forEach((block) =>
+    boardViewState.fallingPiece.forEach((block) =>
       drawCell(ctx, block, colorFactory(boardViewState.fallingColor))
     );
   }
@@ -260,7 +260,7 @@ export const drawBoard = () => {
 };
 
 export const moveFallingTetromino = (tetromino) => {
-  boardViewState.fallingBlocks = tetromino.map((block) => ({ ...block }));
+  boardViewState.fallingPiece = tetromino.map((block) => ({ ...block }));
   drawBoard();
 };
 
@@ -270,15 +270,15 @@ export const updateTetrominoColor = (color) => {
 };
 
 export const addTetrominoToBoard = ({ tetromino, orientation, color }) => {
-  boardViewState.fallingBlocks = tetromino[orientation].map((block) => ({
+  boardViewState.fallingPiece = tetromino[orientation].map((block) => ({
     ...block,
   }));
   boardViewState.fallingColor = color;
   drawBoard();
 };
 
-export const removeFallingBlocks = () => {
-  boardViewState.fallingBlocks = [];
+export const removeFallingPiece = () => {
+  boardViewState.fallingPiece = [];
   boardViewState.fallingColor = null;
   drawBoard();
 };
@@ -290,7 +290,7 @@ export const addScoreToBoard = (score, lineScore) => {
   document.querySelector(`.${SCORE_CLASS}`).textContent = score;
   document.querySelector(`.${LINE_SCORE_CLASS}`).textContent = lineScore;
 };
-export const addUpcomingTetrominoesToBoard = (tetrominoesBank) => {
+export const addUpcomingTetrominoesToBoard = (tetrominoQueue) => {
   const queueCanvas = document.querySelector(`.${UPCOMMING_TETROMINO_QUEUE}`);
   const queuePreview = getPreviewContext(queueCanvas);
   if (!queuePreview) return;
@@ -308,10 +308,10 @@ export const addUpcomingTetrominoesToBoard = (tetrominoesBank) => {
       slotHeight / (UPCOMMING_QUEUE_ROWS / UPCOMMING_QUEUE_SLOTS)
     )
   );
-  const maxVisible = Math.min(UPCOMMING_QUEUE_SLOTS, tetrominoesBank.length);
+  const maxVisible = Math.min(UPCOMMING_QUEUE_SLOTS, tetrominoQueue.length);
 
   for (let slotIndex = 0; slotIndex < maxVisible; slotIndex += 1) {
-    const tetrominoData = tetrominoesBank[slotIndex];
+    const tetrominoData = tetrominoQueue[slotIndex];
     if (
       !tetrominoData ||
       !tetrominoData.tetromino ||
@@ -366,12 +366,12 @@ export const addUpcomingTetrominoesToBoard = (tetrominoesBank) => {
   }
 };
 
-export const remapBlocksVisualization = (binaryMap) => {
-  boardViewState.lockedMap = binaryMap.map((row) => [...row]);
+export const remapLockedMapVisualization = (lockedMap) => {
+  boardViewState.lockedMap = lockedMap.map((row) => [...row]);
   drawBoard();
 };
 
-export const flashClearedRows = (yPositions, durationMs = 110) => {
+export const flashLineClearRows = (yPositions, durationMs = 110) => {
   if (!Array.isArray(yPositions) || !yPositions.length) return;
 
   boardViewState.flashRows = [...yPositions];

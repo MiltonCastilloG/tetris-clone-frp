@@ -9,10 +9,10 @@ export const isSpaceFilled = (number) => number !== EMPTY_SPACE;
 export const isLineFull = (map) =>
   map.length == map.filter(isSpaceFilled).length;
 
-export const eraseLines = (binaryMap) => {
-  const linesToErase = binaryMap.reduce((acc, value, index) => {
+export const findLinesToClear = (lockedMap) => {
+  const linesToClear = lockedMap.reduce((acc, value, index) => {
     if (isLineFull(value)) acc.push(index);
     return acc;
   }, []);
-  return linesToErase;
+  return linesToClear;
 };

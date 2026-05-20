@@ -1,6 +1,6 @@
 export const fetchForUpload = async (
   tetrominoToSave,
-  binaryMapTosave,
+  lockedMapToSave,
   boardDataToSave
 ) => {
   return await fetch('upload/game', {
@@ -12,7 +12,7 @@ export const fetchForUpload = async (
     },
     body: JSON.stringify({
       tetromino: tetrominoToSave,
-      binaryMap: binaryMapTosave,
+      lockedMap: lockedMapToSave,
       boardData: boardDataToSave,
     }),
   });

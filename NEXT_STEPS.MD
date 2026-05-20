@@ -14,16 +14,34 @@ Done:
 - `9` replace const-only `Array.from(...).forEach` index loops in `board.js` with `for...of` (or `for...in` only where index keys matter and style agrees).
 - `10` second pass on `public/assets/js/lib/stream.js`: review `mutableRef` holder pattern for `scan` / `withLatestFrom`; keep semantics, simplify or document invariants (e.g. `withLatestFrom` may emit before `other` has emitted).
 - `11` native ESM (`import`/`export`, module entry in `index.html`), client split (`config/`, `utils`, `collision`, `api`, `initGame`); ESLint `public/**/*.js` is `sourceType: 'module'` with `no-undef` and `no-unused-vars` enabled.
+- `0` canonical rename pass (`CONTEXT.md` naming: `lockedMap`, `tetrominoQueue`, `CLOCK_TICK_MS`, `DELAY_CLOCK_TICKS`, `*Piece`, line-clear symbols).
 
 Left:
-
 - `1` richer board renderer state refactor.
 - `2` responsive playfield sizing.
 - `3` ghost piece rendering.
-- `5.5` make a 1/2 tick pause when a piece lands
+- `5.5` spawn delay clock ticks after settle.
 - `6` compatibility pass and minimal integration hooks verification.
 - `8` full validation checklist run.
 - `11.1` bundler / dev-server evaluation: **esbuild** vs **Vite** vs thin **Express** on top of `server.js`; optional prod bundle and HMR; **Nest** / **Next** only if you want a full framework shell.
+
+## Domain decisions
+
+Glossary: [`CONTEXT.md`](./CONTEXT.md) — small, agent-readable domain terms only. No `docs/adr/`; record trade-offs here instead.
+
+**Tick** = one game-step **clock tick**, never ms. Ms interval → `CLOCK_TICK_MS`.
+
+**Delay clock ticks** (pre-settle ground grace): default `2` (`DELAY_CLOCK_TICKS`). **Spawn delay clock ticks** (post-settle before next active piece): `1` after partial landing, `2` after complete landing — two config constants.
+
+**Ghost piece** rest position = same as **hard drop** rest position for the active piece.
+
+**Locked cells**: empty cell (`0`) or **locked cell** with a **color** string ID (not boolean `1`).
+
+**Rotation:** **orientation** (0–3); **rotation kick** for blocked rotates (see `CONTEXT.md`).
+
+**Line clear** is the canonical term (not erase/erased). Applied in code: `findLinesToClear`, `CLEAR_LINES`, `linesCleared`, `flashLineClearRows`, etc.
+
+**Order:** glossary → rename pass (`0`, done) → remaining items in this file.
 
 ## Goal
 
@@ -73,7 +91,7 @@ File:
 
 Status:
 
-- Pending. Blocks validation item `Ghost always matches actual landing position` in step `8`.
+- Pending. Blocks validation item `Ghost always matches rest position` in step `8`.
 
 Actions:
 
@@ -96,11 +114,11 @@ Files:
 
 Actions:
 
-- Add lock delay of `1` gravity tick before ground settle.
+- Lock delay uses **delay clock ticks** (default `2` clock ticks before settle on ground contact).
 - Reset lock delay on successful left/right/rotate movement, capped at `15` resets.
 - Ensure floor-aware rotation kick (including upward kick) counts as movement for lock-delay reset.
 - Add a renderer function like `flashClearedRows(yPositions)`.
-- In `game.js`, call it when `linesToErase.length > 0`.
+- In `game.js`, call it when a **line clear** occurs (today: `linesToErase.length > 0`; rename in step `0`).
 - In `board.js`, overlay a short (80–140ms) flash on affected rows, driven by timestamp and redraw.
 - Keep existing line-clear scoring behavior unchanged.
 
@@ -183,7 +201,30 @@ Actions:
 - Reduce empty space and tune score/lines typography scale.
 - Keep labels compact and values readable without oversized text.
 
-## 5.5) make a 1/2 tick pause when a piece lands
+## 5.5) Spawn delay clock ticks after settle
+
+Files:
+
+- `public/assets/js/game.js`
+- `public/assets/js/config/settings.js`
+
+Actions:
+
+- After **settle**, wait before spawning the next **active piece** (distinct from **delay clock ticks**).
+- Two constants: `1` clock tick after **partial landing**, `2` after **complete landing** (line clear).
+- Do not conflate with pre-settle **delay clock ticks** (`DELAY_CLOCK_TICKS`, default `2`).
+
+## 0) Canonical rename pass
+
+Files:
+
+- `public/assets/js/game.js`, `board.js`, `api.js`, `collision.js`, `utils.js`, `config/settings.js`, and any module still using legacy names.
+
+Actions:
+
+- Apply renames listed in **Domain decisions** so code matches `CONTEXT.md`.
+- No gameplay behavior change in this step unless required by a rename.
+- Run `pnpm lint` after.
 
 ## 6) Keep compatibility with existing flow
 
@@ -216,8 +257,8 @@ Actions:
 - [~] collisions unchanged (collision API paths unchanged; gameplay run still pending).
 - [~] Hold/swap still works (flow unchanged; gameplay run still pending).
 - [~] Queue updates correctly (update call unchanged; gameplay run still pending).
-- [ ] Ghost always matches actual landing position (blocked: ghost rendering not implemented yet).
-- [x] Flash appears only on cleared lines (triggered only when `linesToErase.length > 0`).
+- [ ] Ghost always matches **rest position** (blocked: ghost rendering not implemented yet).
+- [x] **Line clear flash** appears only on rows removed by a **line clear**.
 - [~] Playfield and previews stay crisp on DPR screens and resize correctly (DPR scaling present; responsive resize work still pending in step `2`).
 
 ## 9) Prefer `for...of` over index `forEach` for grid / queue loops
