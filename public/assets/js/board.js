@@ -18,33 +18,22 @@ import { colorFactory } from './lib/tetrominoes.js';
 
 const getBoardCanvas = () => document.querySelector('.js-board');
 
-const renderState = {
+const createPlayfieldRenderState = () => ({
   lockedMap: LOCKED_MAP.map((row) => [...row]),
   fallingBlocks: [],
   fallingColor: null,
   ghostBlocks: [],
   flashRows: [],
   flashUntilMs: 0,
-  cellW: HORIZONTAL_MOVEMENT,
-  cellH: VERTICAL_MOVEMENT,
-  dpr: 1,
-  dprCellW: HORIZONTAL_MOVEMENT,
-  dprCellH: VERTICAL_MOVEMENT,
-  dprBoardW: BOARD_WIDTH,
-  dprBoardH: BOARD_HEIGHT,
-};
+  flashFrameId: null,
+  cellW: HORIZONTAL_MOVEMENT - 2,
+  cellH: VERTICAL_MOVEMENT - 2,
+  dpr: null,
+  canvasPixelWidth: null,
+  canvasPixelHeight: null,
+});
 
-let flashFrameId = null;
-
-const updateRenderMetrics = (dpr) => {
-  renderState.cellW = HORIZONTAL_MOVEMENT;
-  renderState.cellH = VERTICAL_MOVEMENT;
-  renderState.dpr = dpr;
-  renderState.dprCellW = HORIZONTAL_MOVEMENT * dpr;
-  renderState.dprCellH = VERTICAL_MOVEMENT * dpr;
-  renderState.dprBoardW = BOARD_WIDTH * dpr;
-  renderState.dprBoardH = BOARD_HEIGHT * dpr;
-};
+const playfieldRenderState = createPlayfieldRenderState();
 
 const PREVIEW_FALLBACK_SIZE = 150;
 const HOLD_GRID_COLUMNS = 4;
@@ -52,6 +41,37 @@ const HOLD_GRID_ROWS = 4;
 const UPCOMMING_QUEUE_COLUMNS = 4;
 const UPCOMMING_QUEUE_ROWS = 12;
 const UPCOMMING_QUEUE_SLOTS = 3;
+
+const syncPlayfieldMetrics = (board) => {
+  const dpr = window.devicePixelRatio || 1;
+  const expectedWidth = BOARD_WIDTH * dpr;
+  const expectedHeight = BOARD_HEIGHT * dpr;
+  const metricsChanged =
+    playfieldRenderState.dpr !== dpr ||
+    playfieldRenderState.canvasPixelWidth !== expectedWidth ||
+    playfieldRenderState.canvasPixelHeight !== expectedHeight;
+
+  if (metricsChanged) {
+    playfieldRenderState.dpr = dpr;
+    playfieldRenderState.canvasPixelWidth = expectedWidth;
+    playfieldRenderState.canvasPixelHeight = expectedHeight;
+    playfieldRenderState.cellW = HORIZONTAL_MOVEMENT - 2;
+    playfieldRenderState.cellH = VERTICAL_MOVEMENT - 2;
+  }
+
+  if (
+    metricsChanged ||
+    board.width !== expectedWidth ||
+    board.height !== expectedHeight
+  ) {
+    board.width = expectedWidth;
+    board.height = expectedHeight;
+    board.style.width = `${BOARD_WIDTH}px`;
+    board.style.height = `${BOARD_HEIGHT}px`;
+  }
+
+  return dpr;
+};
 
 const drawPlayfieldBackground = (ctx) => {
   const background = ctx.createLinearGradient(0, 0, 0, BOARD_HEIGHT);
@@ -62,12 +82,11 @@ const drawPlayfieldBackground = (ctx) => {
 };
 
 const drawPlayfieldGrid = (ctx) => {
-  const { cellW, cellH } = renderState;
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.lineWidth = 1;
 
   for (let x = 0; x <= HORIZONTAL_DIMENSIONS; x += 1) {
-    const px = x * cellW + 0.5;
+    const px = x * HORIZONTAL_MOVEMENT + 0.5;
     ctx.beginPath();
     ctx.moveTo(px, 0);
     ctx.lineTo(px, BOARD_HEIGHT);
@@ -75,7 +94,7 @@ const drawPlayfieldGrid = (ctx) => {
   }
 
   for (let y = 0; y <= VERTICAL_DIMENSIONS; y += 1) {
-    const py = y * cellH + 0.5;
+    const py = y * VERTICAL_MOVEMENT + 0.5;
     ctx.beginPath();
     ctx.moveTo(0, py);
     ctx.lineTo(BOARD_WIDTH, py);
@@ -83,104 +102,125 @@ const drawPlayfieldGrid = (ctx) => {
   }
 };
 
-const drawLockedCells = (ctx) => {
-  renderState.lockedMap.forEach((row, y) => {
+const drawPlayfieldCell = (ctx, { y, x }, color, { cellW, cellH }) => {
+  const pxX = x * HORIZONTAL_MOVEMENT;
+  const pxY = y * VERTICAL_MOVEMENT;
+  const left = pxX + 1;
+  const top = pxY + 1;
+
+  ctx.fillStyle = color;
+  ctx.fillRect(left, top, cellW, cellH);
+
+  const shade = ctx.createLinearGradient(left, top, left, top + cellH);
+  shade.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+  shade.addColorStop(1, 'rgba(0, 0, 0, 0.18)');
+  ctx.fillStyle = shade;
+  ctx.fillRect(left, top, cellW, cellH);
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.strokeRect(left + 0.5, top + 0.5, cellW - 1, cellH - 1);
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.strokeRect(left, top, cellW, cellH);
+};
+
+const drawGhostCell = (ctx, { y, x }, color, { cellW, cellH }) => {
+  const pxX = x * HORIZONTAL_MOVEMENT;
+  const pxY = y * VERTICAL_MOVEMENT;
+  const left = pxX + 1;
+  const top = pxY + 1;
+
+  ctx.save();
+  ctx.globalAlpha = 0.28;
+  ctx.fillStyle = color;
+  ctx.fillRect(left, top, cellW, cellH);
+  ctx.globalAlpha = 0.55;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(left + 0.5, top + 0.5, cellW - 1, cellH - 1);
+  ctx.restore();
+};
+
+const drawLockedLayer = (ctx, renderState) => {
+  const { lockedMap, cellW, cellH } = renderState;
+  lockedMap.forEach((row, y) => {
     row.forEach((spaceNum, x) => {
       if (isSpaceFilled(spaceNum)) {
-        drawCell(ctx, { y, x }, colorFactory(spaceNum));
+        drawPlayfieldCell(ctx, { y, x }, colorFactory(spaceNum), {
+          cellW,
+          cellH,
+        });
       }
     });
   });
 };
 
-const drawFallingBlocks = (ctx) => {
-  if (!renderState.fallingColor) return;
+const drawGhostLayer = (ctx, renderState) => {
+  const { ghostBlocks, fallingColor, cellW, cellH } = renderState;
+  if (!ghostBlocks.length) return;
 
-  renderState.fallingBlocks.forEach((block) =>
-    drawCell(ctx, block, colorFactory(renderState.fallingColor))
+  const ghostColor = fallingColor
+    ? colorFactory(fallingColor)
+    : 'rgba(255, 255, 255, 0.35)';
+  ghostBlocks.forEach((block) =>
+    drawGhostCell(ctx, block, ghostColor, { cellW, cellH })
   );
 };
 
-const drawFlashOverlay = (ctx, nowMs) => {
-  const { flashRows, flashUntilMs, cellH } = renderState;
+const drawFallingLayer = (ctx, renderState) => {
+  const { fallingBlocks, fallingColor, cellW, cellH } = renderState;
+  if (!fallingColor) return;
+
+  const color = colorFactory(fallingColor);
+  fallingBlocks.forEach((block) =>
+    drawPlayfieldCell(ctx, block, color, { cellW, cellH })
+  );
+};
+
+const drawFlashOverlay = (ctx, renderState, nowMs) => {
+  const { flashRows, flashUntilMs } = renderState;
   if (!flashRows.length || nowMs >= flashUntilMs) return;
+
   const remainingMs = flashUntilMs - nowMs;
   const alpha = Math.min(0.75, Math.max(0.2, remainingMs / 140));
 
   ctx.save();
   ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
   flashRows.forEach((y) => {
-    const top = y * cellH;
-    ctx.fillRect(0, top, BOARD_WIDTH, cellH);
+    const top = y * VERTICAL_MOVEMENT;
+    ctx.fillRect(0, top, BOARD_WIDTH, VERTICAL_MOVEMENT);
   });
   ctx.restore();
 };
 
 const runFlashRedrawLoop = () => {
-  if (flashFrameId) {
-    cancelAnimationFrame(flashFrameId);
+  if (playfieldRenderState.flashFrameId) {
+    cancelAnimationFrame(playfieldRenderState.flashFrameId);
   }
 
   const repaint = () => {
     drawBoard();
-    if (Date.now() < renderState.flashUntilMs) {
-      flashFrameId = requestAnimationFrame(repaint);
+    if (Date.now() < playfieldRenderState.flashUntilMs) {
+      playfieldRenderState.flashFrameId = requestAnimationFrame(repaint);
       return;
     }
 
-    renderState.flashRows = [];
-    flashFrameId = null;
+    playfieldRenderState.flashRows = [];
+    playfieldRenderState.flashFrameId = null;
     drawBoard();
   };
 
-  flashFrameId = requestAnimationFrame(repaint);
+  playfieldRenderState.flashFrameId = requestAnimationFrame(repaint);
 };
 
 const getBoardContext = () => {
   const board = getBoardCanvas();
   if (!board) return null;
-  const dpr = window.devicePixelRatio || 1;
-  const expectedWidth = BOARD_WIDTH * dpr;
-  const expectedHeight = BOARD_HEIGHT * dpr;
 
-  updateRenderMetrics(dpr);
-
-  if (board.width !== expectedWidth || board.height !== expectedHeight) {
-    board.width = expectedWidth;
-    board.height = expectedHeight;
-    board.style.width = `${BOARD_WIDTH}px`;
-    board.style.height = `${BOARD_HEIGHT}px`;
-  }
-
+  const dpr = syncPlayfieldMetrics(board);
   const ctx = board.getContext('2d');
   if (!ctx) return null;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return ctx;
-};
-
-const drawCell = (ctx, { y, x }, color) => {
-  const { cellW, cellH } = renderState;
-  const pxX = x * cellW;
-  const pxY = y * cellH;
-  const width = cellW - 2;
-  const height = cellH - 2;
-  const left = pxX + 1;
-  const top = pxY + 1;
-
-  ctx.fillStyle = color;
-  ctx.fillRect(left, top, width, height);
-
-  // Soft vertical shading for a subtle 3D block feel.
-  const shade = ctx.createLinearGradient(left, top, left, top + height);
-  shade.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-  shade.addColorStop(1, 'rgba(0, 0, 0, 0.18)');
-  ctx.fillStyle = shade;
-  ctx.fillRect(left, top, width, height);
-
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-  ctx.strokeRect(left + 0.5, top + 0.5, width - 1, height - 1);
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
-  ctx.strokeRect(left, top, width, height);
 };
 
 const getPreviewDimensions = (canvas) => ({
@@ -279,9 +319,10 @@ export const drawBoard = () => {
   ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
   drawPlayfieldBackground(ctx);
   drawPlayfieldGrid(ctx);
-  drawLockedCells(ctx);
-  drawFallingBlocks(ctx);
-  drawFlashOverlay(ctx, nowMs);
+  drawLockedLayer(ctx, playfieldRenderState);
+  drawGhostLayer(ctx, playfieldRenderState);
+  drawFallingLayer(ctx, playfieldRenderState);
+  drawFlashOverlay(ctx, playfieldRenderState, nowMs);
 
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
   ctx.lineWidth = 2;
@@ -289,26 +330,26 @@ export const drawBoard = () => {
 };
 
 export const moveFallingTetromino = (tetromino) => {
-  renderState.fallingBlocks = tetromino.map((block) => ({ ...block }));
+  playfieldRenderState.fallingBlocks = tetromino.map((block) => ({ ...block }));
   drawBoard();
 };
 
 export const updateTetrominoColor = (color) => {
-  renderState.fallingColor = color;
+  playfieldRenderState.fallingColor = color;
   drawBoard();
 };
 
 export const addTetrominoToBoard = ({ tetromino, orientation, color }) => {
-  renderState.fallingBlocks = tetromino[orientation].map((block) => ({
+  playfieldRenderState.fallingBlocks = tetromino[orientation].map((block) => ({
     ...block,
   }));
-  renderState.fallingColor = color;
+  playfieldRenderState.fallingColor = color;
   drawBoard();
 };
 
 export const removeFallingPiece = () => {
-  renderState.fallingBlocks = [];
-  renderState.fallingColor = null;
+  playfieldRenderState.fallingBlocks = [];
+  playfieldRenderState.fallingColor = null;
   drawBoard();
 };
 
@@ -396,14 +437,14 @@ export const addUpcomingTetrominoesToBoard = (tetrominoQueue) => {
 };
 
 export const remapLockedMapVisualization = (lockedMap) => {
-  renderState.lockedMap = lockedMap.map((row) => [...row]);
+  playfieldRenderState.lockedMap = lockedMap.map((row) => [...row]);
   drawBoard();
 };
 
 export const flashLineClearRows = (yPositions, durationMs = 110) => {
   if (!Array.isArray(yPositions) || !yPositions.length) return;
 
-  renderState.flashRows = [...yPositions];
-  renderState.flashUntilMs = Date.now() + durationMs;
+  playfieldRenderState.flashRows = [...yPositions];
+  playfieldRenderState.flashUntilMs = Date.now() + durationMs;
   runFlashRedrawLoop();
 };
