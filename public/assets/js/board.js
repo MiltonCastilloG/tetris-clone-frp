@@ -18,14 +18,34 @@ import { colorFactory } from './lib/tetrominoes.js';
 
 const getBoardCanvas = () => document.querySelector('.js-board');
 
-const boardViewState = {
+const renderState = {
   lockedMap: LOCKED_MAP.map((row) => [...row]),
-  fallingPiece: [],
+  fallingBlocks: [],
   fallingColor: null,
+  ghostBlocks: [],
   flashRows: [],
   flashUntilMs: 0,
-  flashFrameId: null,
+  cellW: HORIZONTAL_MOVEMENT,
+  cellH: VERTICAL_MOVEMENT,
+  dpr: 1,
+  dprCellW: HORIZONTAL_MOVEMENT,
+  dprCellH: VERTICAL_MOVEMENT,
+  dprBoardW: BOARD_WIDTH,
+  dprBoardH: BOARD_HEIGHT,
 };
+
+let flashFrameId = null;
+
+const updateRenderMetrics = (dpr) => {
+  renderState.cellW = HORIZONTAL_MOVEMENT;
+  renderState.cellH = VERTICAL_MOVEMENT;
+  renderState.dpr = dpr;
+  renderState.dprCellW = HORIZONTAL_MOVEMENT * dpr;
+  renderState.dprCellH = VERTICAL_MOVEMENT * dpr;
+  renderState.dprBoardW = BOARD_WIDTH * dpr;
+  renderState.dprBoardH = BOARD_HEIGHT * dpr;
+};
+
 const PREVIEW_FALLBACK_SIZE = 150;
 const HOLD_GRID_COLUMNS = 4;
 const HOLD_GRID_ROWS = 4;
@@ -42,11 +62,12 @@ const drawPlayfieldBackground = (ctx) => {
 };
 
 const drawPlayfieldGrid = (ctx) => {
+  const { cellW, cellH } = renderState;
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.lineWidth = 1;
 
   for (let x = 0; x <= HORIZONTAL_DIMENSIONS; x += 1) {
-    const px = x * HORIZONTAL_MOVEMENT + 0.5;
+    const px = x * cellW + 0.5;
     ctx.beginPath();
     ctx.moveTo(px, 0);
     ctx.lineTo(px, BOARD_HEIGHT);
@@ -54,7 +75,7 @@ const drawPlayfieldGrid = (ctx) => {
   }
 
   for (let y = 0; y <= VERTICAL_DIMENSIONS; y += 1) {
-    const py = y * VERTICAL_MOVEMENT + 0.5;
+    const py = y * cellH + 0.5;
     ctx.beginPath();
     ctx.moveTo(0, py);
     ctx.lineTo(BOARD_WIDTH, py);
@@ -62,39 +83,57 @@ const drawPlayfieldGrid = (ctx) => {
   }
 };
 
+const drawLockedCells = (ctx) => {
+  renderState.lockedMap.forEach((row, y) => {
+    row.forEach((spaceNum, x) => {
+      if (isSpaceFilled(spaceNum)) {
+        drawCell(ctx, { y, x }, colorFactory(spaceNum));
+      }
+    });
+  });
+};
+
+const drawFallingBlocks = (ctx) => {
+  if (!renderState.fallingColor) return;
+
+  renderState.fallingBlocks.forEach((block) =>
+    drawCell(ctx, block, colorFactory(renderState.fallingColor))
+  );
+};
+
 const drawFlashOverlay = (ctx, nowMs) => {
-  if (!boardViewState.flashRows.length || nowMs >= boardViewState.flashUntilMs)
-    return;
-  const remainingMs = boardViewState.flashUntilMs - nowMs;
+  const { flashRows, flashUntilMs, cellH } = renderState;
+  if (!flashRows.length || nowMs >= flashUntilMs) return;
+  const remainingMs = flashUntilMs - nowMs;
   const alpha = Math.min(0.75, Math.max(0.2, remainingMs / 140));
 
   ctx.save();
   ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-  boardViewState.flashRows.forEach((y) => {
-    const top = y * VERTICAL_MOVEMENT;
-    ctx.fillRect(0, top, BOARD_WIDTH, VERTICAL_MOVEMENT);
+  flashRows.forEach((y) => {
+    const top = y * cellH;
+    ctx.fillRect(0, top, BOARD_WIDTH, cellH);
   });
   ctx.restore();
 };
 
 const runFlashRedrawLoop = () => {
-  if (boardViewState.flashFrameId) {
-    cancelAnimationFrame(boardViewState.flashFrameId);
+  if (flashFrameId) {
+    cancelAnimationFrame(flashFrameId);
   }
 
   const repaint = () => {
     drawBoard();
-    if (Date.now() < boardViewState.flashUntilMs) {
-      boardViewState.flashFrameId = requestAnimationFrame(repaint);
+    if (Date.now() < renderState.flashUntilMs) {
+      flashFrameId = requestAnimationFrame(repaint);
       return;
     }
 
-    boardViewState.flashRows = [];
-    boardViewState.flashFrameId = null;
+    renderState.flashRows = [];
+    flashFrameId = null;
     drawBoard();
   };
 
-  boardViewState.flashFrameId = requestAnimationFrame(repaint);
+  flashFrameId = requestAnimationFrame(repaint);
 };
 
 const getBoardContext = () => {
@@ -103,6 +142,8 @@ const getBoardContext = () => {
   const dpr = window.devicePixelRatio || 1;
   const expectedWidth = BOARD_WIDTH * dpr;
   const expectedHeight = BOARD_HEIGHT * dpr;
+
+  updateRenderMetrics(dpr);
 
   if (board.width !== expectedWidth || board.height !== expectedHeight) {
     board.width = expectedWidth;
@@ -118,10 +159,11 @@ const getBoardContext = () => {
 };
 
 const drawCell = (ctx, { y, x }, color) => {
-  const pxX = x * HORIZONTAL_MOVEMENT;
-  const pxY = y * VERTICAL_MOVEMENT;
-  const width = HORIZONTAL_MOVEMENT - 2;
-  const height = VERTICAL_MOVEMENT - 2;
+  const { cellW, cellH } = renderState;
+  const pxX = x * cellW;
+  const pxY = y * cellH;
+  const width = cellW - 2;
+  const height = cellH - 2;
   const left = pxX + 1;
   const top = pxY + 1;
 
@@ -237,21 +279,8 @@ export const drawBoard = () => {
   ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
   drawPlayfieldBackground(ctx);
   drawPlayfieldGrid(ctx);
-
-  boardViewState.lockedMap.forEach((row, y) => {
-    row.forEach((spaceNum, x) => {
-      if (isSpaceFilled(spaceNum)) {
-        drawCell(ctx, { y, x }, colorFactory(spaceNum));
-      }
-    });
-  });
-
-  if (boardViewState.fallingColor) {
-    boardViewState.fallingPiece.forEach((block) =>
-      drawCell(ctx, block, colorFactory(boardViewState.fallingColor))
-    );
-  }
-
+  drawLockedCells(ctx);
+  drawFallingBlocks(ctx);
   drawFlashOverlay(ctx, nowMs);
 
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
@@ -260,26 +289,26 @@ export const drawBoard = () => {
 };
 
 export const moveFallingTetromino = (tetromino) => {
-  boardViewState.fallingPiece = tetromino.map((block) => ({ ...block }));
+  renderState.fallingBlocks = tetromino.map((block) => ({ ...block }));
   drawBoard();
 };
 
 export const updateTetrominoColor = (color) => {
-  boardViewState.fallingColor = color;
+  renderState.fallingColor = color;
   drawBoard();
 };
 
 export const addTetrominoToBoard = ({ tetromino, orientation, color }) => {
-  boardViewState.fallingPiece = tetromino[orientation].map((block) => ({
+  renderState.fallingBlocks = tetromino[orientation].map((block) => ({
     ...block,
   }));
-  boardViewState.fallingColor = color;
+  renderState.fallingColor = color;
   drawBoard();
 };
 
 export const removeFallingPiece = () => {
-  boardViewState.fallingPiece = [];
-  boardViewState.fallingColor = null;
+  renderState.fallingBlocks = [];
+  renderState.fallingColor = null;
   drawBoard();
 };
 
@@ -367,14 +396,14 @@ export const addUpcomingTetrominoesToBoard = (tetrominoQueue) => {
 };
 
 export const remapLockedMapVisualization = (lockedMap) => {
-  boardViewState.lockedMap = lockedMap.map((row) => [...row]);
+  renderState.lockedMap = lockedMap.map((row) => [...row]);
   drawBoard();
 };
 
 export const flashLineClearRows = (yPositions, durationMs = 110) => {
   if (!Array.isArray(yPositions) || !yPositions.length) return;
 
-  boardViewState.flashRows = [...yPositions];
-  boardViewState.flashUntilMs = Date.now() + durationMs;
+  renderState.flashRows = [...yPositions];
+  renderState.flashUntilMs = Date.now() + durationMs;
   runFlashRedrawLoop();
 };
