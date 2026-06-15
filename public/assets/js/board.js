@@ -18,6 +18,11 @@ import { colorFactory } from './lib/tetrominoes.js';
 
 const getBoardCanvas = () => document.querySelector('.js-board');
 
+const MIN_CELL_CSS_PX = 13;
+const RESIZE_DEBOUNCE_MS = 125;
+const MAX_CSS_WIDTH = BOARD_WIDTH;
+const MAX_CSS_HEIGHT = BOARD_HEIGHT;
+
 const createPlayfieldRenderState = () => ({
   lockedMap: LOCKED_MAP.map((row) => [...row]),
   fallingBlocks: [],
@@ -26,6 +31,10 @@ const createPlayfieldRenderState = () => ({
   flashRows: [],
   flashUntilMs: 0,
   flashFrameId: null,
+  cssWidth: BOARD_WIDTH,
+  cssHeight: BOARD_HEIGHT,
+  horizontalStep: HORIZONTAL_MOVEMENT,
+  verticalStep: VERTICAL_MOVEMENT,
   cellW: HORIZONTAL_MOVEMENT - 2,
   cellH: VERTICAL_MOVEMENT - 2,
   dpr: null,
@@ -42,69 +51,201 @@ const UPCOMMING_QUEUE_COLUMNS = 4;
 const UPCOMMING_QUEUE_ROWS = 12;
 const UPCOMMING_QUEUE_SLOTS = 3;
 
+const getViewportSize = () => {
+  const visualViewport = window.visualViewport;
+  if (visualViewport) {
+    return {
+      width: visualViewport.width,
+      height: visualViewport.height,
+    };
+  }
+
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+};
+
+const getPlayfieldLayoutShell = (board) =>
+  board?.closest('.game-container') || board?.parentElement;
+
+const measureAvailableBounds = (board) => {
+  const shell = getPlayfieldLayoutShell(board);
+  if (!shell) return null;
+
+  const shellRect = shell.getBoundingClientRect();
+  const { width: viewportWidth, height: viewportHeight } = getViewportSize();
+  let availableWidth = Math.min(shellRect.width, viewportWidth);
+  const availableHeight = Math.min(shellRect.height, viewportHeight);
+
+  const row = board.closest('.row-container');
+  if (row) {
+    const rowStyle = window.getComputedStyle(row);
+    const isHorizontalLayout =
+      rowStyle.flexDirection === 'row' ||
+      rowStyle.flexDirection === 'row-reverse';
+
+    if (isHorizontalLayout) {
+      const leftSide = row.querySelector('.left-side-container');
+      const rightSide = row.querySelector('.right-side-container');
+      if (leftSide) {
+        availableWidth -= leftSide.getBoundingClientRect().width;
+      }
+      if (rightSide) {
+        availableWidth -= rightSide.getBoundingClientRect().width;
+      }
+
+      const gap = Number.parseFloat(rowStyle.gap) || 0;
+      if (leftSide && rightSide) {
+        availableWidth -= gap * 2;
+      } else if (leftSide || rightSide) {
+        availableWidth -= gap;
+      }
+    }
+  }
+
+  return {
+    width: Math.max(0, availableWidth),
+    height: Math.max(0, availableHeight),
+  };
+};
+
+const computePlayfieldCssSize = (availableWidth, availableHeight) => {
+  const minWidth = HORIZONTAL_DIMENSIONS * MIN_CELL_CSS_PX;
+  const minHeight = VERTICAL_DIMENSIONS * MIN_CELL_CSS_PX;
+
+  let cssWidth = availableWidth;
+  let cssHeight = (cssWidth * VERTICAL_DIMENSIONS) / HORIZONTAL_DIMENSIONS;
+
+  if (cssHeight > availableHeight) {
+    cssHeight = availableHeight;
+    cssWidth = (cssHeight * HORIZONTAL_DIMENSIONS) / VERTICAL_DIMENSIONS;
+  }
+
+  cssWidth = Math.max(cssWidth, minWidth);
+  cssHeight = Math.max(cssHeight, minHeight);
+  cssWidth = Math.min(cssWidth, MAX_CSS_WIDTH);
+  cssHeight = Math.min(cssHeight, MAX_CSS_HEIGHT);
+  cssWidth = Math.max(cssWidth, minWidth);
+  cssHeight = Math.max(cssHeight, minHeight);
+
+  return {
+    cssWidth: Math.max(1, Math.round(cssWidth)),
+    cssHeight: Math.max(1, Math.round(cssHeight)),
+  };
+};
+
+const updateCachedMetrics = (cssWidth, cssHeight, dpr) => {
+  const horizontalStep = cssWidth / HORIZONTAL_DIMENSIONS;
+  const verticalStep = cssHeight / VERTICAL_DIMENSIONS;
+
+  playfieldRenderState.cssWidth = cssWidth;
+  playfieldRenderState.cssHeight = cssHeight;
+  playfieldRenderState.horizontalStep = horizontalStep;
+  playfieldRenderState.verticalStep = verticalStep;
+  playfieldRenderState.cellW = Math.max(1, horizontalStep - 2);
+  playfieldRenderState.cellH = Math.max(1, verticalStep - 2);
+  playfieldRenderState.dpr = dpr;
+  playfieldRenderState.canvasPixelWidth = Math.round(cssWidth * dpr);
+  playfieldRenderState.canvasPixelHeight = Math.round(cssHeight * dpr);
+};
+
+const applyPlayfieldCanvasSize = (board, cssWidth, cssHeight, dpr) => {
+  const backingWidth = Math.round(cssWidth * dpr);
+  const backingHeight = Math.round(cssHeight * dpr);
+
+  board.style.width = `${cssWidth}px`;
+  board.style.height = `${cssHeight}px`;
+  board.width = backingWidth;
+  board.height = backingHeight;
+};
+
+const refreshPlayfieldLayout = () => {
+  const board = getBoardCanvas();
+  if (!board) return false;
+
+  const bounds = measureAvailableBounds(board);
+  if (!bounds) return false;
+
+  const { cssWidth, cssHeight } = computePlayfieldCssSize(
+    bounds.width,
+    bounds.height
+  );
+  const dpr = window.devicePixelRatio || 1;
+
+  updateCachedMetrics(cssWidth, cssHeight, dpr);
+  applyPlayfieldCanvasSize(board, cssWidth, cssHeight, dpr);
+
+  return true;
+};
+
 const syncPlayfieldMetrics = (board) => {
   const dpr = window.devicePixelRatio || 1;
-  const expectedWidth = BOARD_WIDTH * dpr;
-  const expectedHeight = BOARD_HEIGHT * dpr;
+  const { cssWidth, cssHeight } = playfieldRenderState;
+
+  if (!cssWidth || !cssHeight) {
+    refreshPlayfieldLayout();
+    return playfieldRenderState.dpr || dpr;
+  }
+
+  const expectedWidth = Math.round(cssWidth * dpr);
+  const expectedHeight = Math.round(cssHeight * dpr);
   const metricsChanged =
     playfieldRenderState.dpr !== dpr ||
     playfieldRenderState.canvasPixelWidth !== expectedWidth ||
     playfieldRenderState.canvasPixelHeight !== expectedHeight;
 
   if (metricsChanged) {
-    playfieldRenderState.dpr = dpr;
-    playfieldRenderState.canvasPixelWidth = expectedWidth;
-    playfieldRenderState.canvasPixelHeight = expectedHeight;
-    playfieldRenderState.cellW = HORIZONTAL_MOVEMENT - 2;
-    playfieldRenderState.cellH = VERTICAL_MOVEMENT - 2;
-  }
-
-  if (
-    metricsChanged ||
-    board.width !== expectedWidth ||
-    board.height !== expectedHeight
-  ) {
+    updateCachedMetrics(cssWidth, cssHeight, dpr);
     board.width = expectedWidth;
     board.height = expectedHeight;
-    board.style.width = `${BOARD_WIDTH}px`;
-    board.style.height = `${BOARD_HEIGHT}px`;
+    board.style.width = `${cssWidth}px`;
+    board.style.height = `${cssHeight}px`;
   }
 
   return dpr;
 };
 
-const drawPlayfieldBackground = (ctx) => {
-  const background = ctx.createLinearGradient(0, 0, 0, BOARD_HEIGHT);
+const drawPlayfieldBackground = (ctx, { cssWidth, cssHeight }) => {
+  const background = ctx.createLinearGradient(0, 0, 0, cssHeight);
   background.addColorStop(0, '#11141d');
   background.addColorStop(1, '#06080d');
   ctx.fillStyle = background;
-  ctx.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
+  ctx.fillRect(0, 0, cssWidth, cssHeight);
 };
 
-const drawPlayfieldGrid = (ctx) => {
+const drawPlayfieldGrid = (
+  ctx,
+  { cssWidth, cssHeight, horizontalStep, verticalStep }
+) => {
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.lineWidth = 1;
 
   for (let x = 0; x <= HORIZONTAL_DIMENSIONS; x += 1) {
-    const px = x * HORIZONTAL_MOVEMENT + 0.5;
+    const px = x * horizontalStep + 0.5;
     ctx.beginPath();
     ctx.moveTo(px, 0);
-    ctx.lineTo(px, BOARD_HEIGHT);
+    ctx.lineTo(px, cssHeight);
     ctx.stroke();
   }
 
   for (let y = 0; y <= VERTICAL_DIMENSIONS; y += 1) {
-    const py = y * VERTICAL_MOVEMENT + 0.5;
+    const py = y * verticalStep + 0.5;
     ctx.beginPath();
     ctx.moveTo(0, py);
-    ctx.lineTo(BOARD_WIDTH, py);
+    ctx.lineTo(cssWidth, py);
     ctx.stroke();
   }
 };
 
-const drawPlayfieldCell = (ctx, { y, x }, color, { cellW, cellH }) => {
-  const pxX = x * HORIZONTAL_MOVEMENT;
-  const pxY = y * VERTICAL_MOVEMENT;
+const drawPlayfieldCell = (
+  ctx,
+  { y, x },
+  color,
+  { horizontalStep, verticalStep, cellW, cellH }
+) => {
+  const pxX = x * horizontalStep;
+  const pxY = y * verticalStep;
   const left = pxX + 1;
   const top = pxY + 1;
 
@@ -123,9 +264,14 @@ const drawPlayfieldCell = (ctx, { y, x }, color, { cellW, cellH }) => {
   ctx.strokeRect(left, top, cellW, cellH);
 };
 
-const drawGhostCell = (ctx, { y, x }, color, { cellW, cellH }) => {
-  const pxX = x * HORIZONTAL_MOVEMENT;
-  const pxY = y * VERTICAL_MOVEMENT;
+const drawGhostCell = (
+  ctx,
+  { y, x },
+  color,
+  { horizontalStep, verticalStep, cellW, cellH }
+) => {
+  const pxX = x * horizontalStep;
+  const pxY = y * verticalStep;
   const left = pxX + 1;
   const top = pxY + 1;
 
@@ -141,11 +287,13 @@ const drawGhostCell = (ctx, { y, x }, color, { cellW, cellH }) => {
 };
 
 const drawLockedLayer = (ctx, renderState) => {
-  const { lockedMap, cellW, cellH } = renderState;
+  const { lockedMap, cellW, cellH, horizontalStep, verticalStep } = renderState;
   lockedMap.forEach((row, y) => {
     row.forEach((spaceNum, x) => {
       if (isSpaceFilled(spaceNum)) {
         drawPlayfieldCell(ctx, { y, x }, colorFactory(spaceNum), {
+          horizontalStep,
+          verticalStep,
           cellW,
           cellH,
         });
@@ -155,29 +303,53 @@ const drawLockedLayer = (ctx, renderState) => {
 };
 
 const drawGhostLayer = (ctx, renderState) => {
-  const { ghostBlocks, fallingColor, cellW, cellH } = renderState;
+  const {
+    ghostBlocks,
+    fallingColor,
+    cellW,
+    cellH,
+    horizontalStep,
+    verticalStep,
+  } = renderState;
   if (!ghostBlocks.length) return;
 
   const ghostColor = fallingColor
     ? colorFactory(fallingColor)
     : 'rgba(255, 255, 255, 0.35)';
   ghostBlocks.forEach((block) =>
-    drawGhostCell(ctx, block, ghostColor, { cellW, cellH })
+    drawGhostCell(ctx, block, ghostColor, {
+      horizontalStep,
+      verticalStep,
+      cellW,
+      cellH,
+    })
   );
 };
 
 const drawFallingLayer = (ctx, renderState) => {
-  const { fallingBlocks, fallingColor, cellW, cellH } = renderState;
+  const {
+    fallingBlocks,
+    fallingColor,
+    cellW,
+    cellH,
+    horizontalStep,
+    verticalStep,
+  } = renderState;
   if (!fallingColor) return;
 
   const color = colorFactory(fallingColor);
   fallingBlocks.forEach((block) =>
-    drawPlayfieldCell(ctx, block, color, { cellW, cellH })
+    drawPlayfieldCell(ctx, block, color, {
+      horizontalStep,
+      verticalStep,
+      cellW,
+      cellH,
+    })
   );
 };
 
 const drawFlashOverlay = (ctx, renderState, nowMs) => {
-  const { flashRows, flashUntilMs } = renderState;
+  const { flashRows, flashUntilMs, cssWidth, verticalStep } = renderState;
   if (!flashRows.length || nowMs >= flashUntilMs) return;
 
   const remainingMs = flashUntilMs - nowMs;
@@ -186,8 +358,8 @@ const drawFlashOverlay = (ctx, renderState, nowMs) => {
   ctx.save();
   ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
   flashRows.forEach((y) => {
-    const top = y * VERTICAL_MOVEMENT;
-    ctx.fillRect(0, top, BOARD_WIDTH, VERTICAL_MOVEMENT);
+    const top = y * verticalStep;
+    ctx.fillRect(0, top, cssWidth, verticalStep);
   });
   ctx.restore();
 };
@@ -315,10 +487,11 @@ export const drawBoard = () => {
   const ctx = getBoardContext();
   if (!ctx) return;
   const nowMs = Date.now();
+  const { cssWidth, cssHeight } = playfieldRenderState;
 
-  ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
-  drawPlayfieldBackground(ctx);
-  drawPlayfieldGrid(ctx);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+  drawPlayfieldBackground(ctx, playfieldRenderState);
+  drawPlayfieldGrid(ctx, playfieldRenderState);
   drawLockedLayer(ctx, playfieldRenderState);
   drawGhostLayer(ctx, playfieldRenderState);
   drawFallingLayer(ctx, playfieldRenderState);
@@ -326,7 +499,7 @@ export const drawBoard = () => {
 
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
   ctx.lineWidth = 2;
-  ctx.strokeRect(1, 1, BOARD_WIDTH - 2, BOARD_HEIGHT - 2);
+  ctx.strokeRect(1, 1, cssWidth - 2, cssHeight - 2);
 };
 
 export const moveFallingTetromino = (tetromino) => {
@@ -448,3 +621,42 @@ export const flashLineClearRows = (yPositions, durationMs = 110) => {
   playfieldRenderState.flashUntilMs = Date.now() + durationMs;
   runFlashRedrawLoop();
 };
+
+let resizeTimer = null;
+
+const schedulePlayfieldLayoutRefresh = () => {
+  if (resizeTimer) {
+    clearTimeout(resizeTimer);
+  }
+
+  resizeTimer = setTimeout(() => {
+    resizeTimer = null;
+    if (refreshPlayfieldLayout()) {
+      drawBoard();
+    }
+  }, RESIZE_DEBOUNCE_MS);
+};
+
+const bindPlayfieldResizeListeners = () => {
+  window.addEventListener('resize', schedulePlayfieldLayoutRefresh);
+  window.addEventListener('orientationchange', schedulePlayfieldLayoutRefresh);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener(
+      'resize',
+      schedulePlayfieldLayoutRefresh
+    );
+  }
+};
+
+const initPlayfieldLayout = () => {
+  refreshPlayfieldLayout();
+  bindPlayfieldResizeListeners();
+};
+
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPlayfieldLayout);
+  } else {
+    initPlayfieldLayout();
+  }
+}
