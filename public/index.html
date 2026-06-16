@@ -4,7 +4,10 @@
     <title>¡Tetris!</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <link rel="stylesheet" type="text/css" href="./assets/css/index.css" />
   </head>
   <body>
@@ -27,44 +30,46 @@
     </div>
     <!-- MENU AND GAME CONTAINERS DIVISION -->
     <div class="js-game-container game-container" style="visibility: hidden">
-      <div class="row-container">
-        <div class="left-side-container">
-          <div class="row-container hold-tetromino-container">
-            <div class="column-container">
-              <h3>Hold</h3>
-              <canvas class="js-hold-tetromino hold-tetromino"></canvas>
-            </div>
-          </div>
-          <div class="row-container score-container">
-            <div class="column-container">
-              <h3>Score:</h3>
-              <h2 class="js-score score">0</h2>
-              <h3>Lines:</h3>
-              <h2 class="js-lines-score score">0</h2>
-            </div>
-          </div>
-        </div>
-        <canvas class="js-board board"></canvas>
-        <div class="right-side-container">
-          <div class="row-container upcomming-tetrominoes-container">
+      <div class="row-container game-layout">
+        <aside class="side-rail">
+          <div class="row-container panel-upcoming upcomming-tetrominoes-container">
             <div
               class="column-container js-upcomming-tetrominoes upcomming-tetrominoes"
             >
-              <h3>Upcoming</h3>
+              <h3 class="panel-label">Upcoming</h3>
               <canvas
                 class="js-upcomming-tetromino-queue upcomming-queue"
               ></canvas>
             </div>
           </div>
-          <div class="row-container">
+          <div class="row-container panel-hold hold-tetromino-container">
             <div class="column-container">
-              <button class="js-pause-btn board-btn pause-btn"></button>
-              <button
-                class="js-upload-game-btn board-btn upload-game-btn"
-              ></button>
+              <h3 class="panel-label">Hold</h3>
+              <canvas class="js-hold-tetromino hold-tetromino"></canvas>
             </div>
           </div>
-        </div>
+          <div class="row-container panel-controls pause-control-container">
+            <div class="column-container game-controls-dock">
+              <div class="mobile-control-tile">
+                <button class="js-pause-btn board-btn pause-btn"></button>
+              </div>
+              <div class="mobile-control-tile">
+                <button
+                  class="js-upload-game-btn board-btn upload-game-btn"
+                ></button>
+              </div>
+            </div>
+          </div>
+          <div class="row-container panel-score score-container">
+            <div class="column-container">
+              <h3 class="panel-label">Score:</h3>
+              <h2 class="js-score score">0</h2>
+              <h3 class="panel-label">Lines:</h3>
+              <h2 class="js-lines-score score">0</h2>
+            </div>
+          </div>
+        </aside>
+        <canvas class="js-board board panel-board"></canvas>
       </div>
     </div>
     <script type="module" src="./assets/js/menu.js"></script>

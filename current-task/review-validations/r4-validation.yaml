@@ -1,0 +1,38 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: validation
+  review: current-task/reviews/responsive-playfield-sizing.yaml
+decision: partially_valid
+valid_findings:
+  - id: f1
+    source: "[verify] mobile viewports show too much UI — upcoming queue and side chrome visible beyond playfield, hold, and score"
+    prefix: verify
+    reason: User rejected post-playtest layout — mobile shows excess UI.
+  - id: f2
+    source: "[verify] main menu page scrolls vertically before game starts"
+    prefix: verify
+    reason: User rejected — main menu does not fit viewport height.
+  - id: f3
+    source: "[verify] main menu Play Game and Restore buttons are not full width"
+    prefix: verify
+    reason: User rejected — menu buttons not width 100%.
+deferred_findings: []
+discarded_findings: []
+next_steps: []
+review_inputs: []
+readiness:
+  status: fix_required
+  recommended_next_step: execute
+  blockers:
+    - mobile shows too much UI — hide upcoming queue and side chrome outside playfield, hold, and score
+    - main menu scrolls vertically before game starts
+    - main menu Play Game and Restore buttons are not full width
+  fix_subtasks:
+    - On mobile viewports show only playfield, hold piece, and score — hide upcoming queue and all other side UI not in that list
+    - On mobile hide pause and upload buttons and any other game chrome outside playfield, hold, and score
+    - Keep desktop layout with fuller compact horizontal UI (hold, upcoming, score) unchanged on non-mobile breakpoints
+    - Main menu Play Game and Restore buttons use width 100%
+    - Main menu page fits viewport height without vertical scroll before game starts
+summary: >
+  User rejected current layout after playtest. Mobile shows too much UI; main menu scrolls
+  and buttons are not full width. Fix loop iteration 3 — route to execute.

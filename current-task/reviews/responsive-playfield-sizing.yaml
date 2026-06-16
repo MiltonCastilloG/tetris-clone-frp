@@ -1,0 +1,8 @@
+approved: true
+content: |
+  Fix-4 resolves the r5 menu-scroll blocker: `.game-container[style*='visibility: hidden']` (and no-space variant) collapses hidden game shell to height 0, min-height 0, max-height 0, overflow hidden, and padding 0.
+  `index.html` ships `.js-game-container` with inline `visibility: hidden`; selectors match. Before game start, menu shell is 100dvh and hidden game container no longer reserves a second viewport in document flow — static review confirms no vertical scroll from stacked 200dvh layout.
+  `menu.js` `showBoard()` sets `.game-container` `visibility: visible`; collapse selectors no longer apply and base `.game-container` min-height 100dvh restores full game viewport when play starts.
+  Fix-3 mobile layout intact at max-width 720px: `.right-side-container { display: none }` hides upcoming queue, pause, and upload; `.js-lines-score { display: none }` hides lines; playfield, hold, and primary score remain.
+  Verify: pnpm run lint passed (exit 0).
+  User browser playtest still pending for mobile layout, DPR sharpness, resize/orientation, and portrait acceptance — not marked done in this review.

@@ -1,0 +1,39 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: execute-plan
+  subtasks: current-task/subtasks/responsive-playfield-sizing.md
+  spec: current-task/specs/responsive-playfield-sizing.yaml
+  context: current-task/status.json
+  status: complete
+  constraints: [no-commit, no-new-deps]
+  iteration: fix-4
+
+paths:
+  created: []
+  modified: [public/assets/css/index.css, current-task/subtasks/responsive-playfield-sizing.md]
+  deleted: []
+  unplanned: []
+
+subtasks:
+  - index: 30
+    text: Prevent hidden game-container from reserving viewport height while menu is shown so main menu fits without vertical scroll
+    status: done
+    checked: true
+    paths: [public/assets/css/index.css]
+    note: Collapse visibility:hidden game-container (height 0, min-height 0, no padding); full 100dvh restores when menu.js sets visibility visible.
+
+verify:
+  - command: pnpm run lint
+    exit: 0
+    passed: true
+
+deviations: []
+open_questions: []
+
+hotspots:
+  - path: public/assets/css/index.css
+    reason: hidden-game-container-collapse-selector
+
+review_scope:
+  mode: full
+  focus_paths: [public/assets/css/index.css]

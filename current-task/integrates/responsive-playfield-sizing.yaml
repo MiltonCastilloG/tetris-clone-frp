@@ -1,0 +1,28 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: integrate-task
+  context: current-task/status.json
+  sync_handoff: current-task/syncs/responsive-playfield-sizing.yaml
+
+status: integrated
+
+merge:
+  status: merged
+  source: feature/responsive-playfield-sizing
+  target_branch: master
+  merge_commit: true
+
+publish:
+  status: published
+  remote: origin
+  branch: master
+  sha: 45da06f7515acf5b304c9b2544ae88088051ad7a
+
+conflicts: []
+user_resolutions: []
+
+checks:
+  - command: git status -sb
+    passed: true
+
+blockers: []
