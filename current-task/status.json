@@ -165,6 +165,18 @@
       "status": "complete",
       "artifact": "current-task/review-validations/r6-validation.yaml",
       "summary": "User playtested and accepted responsive-playfield-sizing including fix rounds 2-4 and ad-hoc tweaks: board.js removed side-panel height cap in measureAvailableBounds; index.css menu buttons clamp height, board flex-shrink 0, desktop min-width 721px restores 90px previews."
+    },
+    {
+      "step": "fix",
+      "status": "skipped",
+      "artifact": "current-task/status.json",
+      "summary": "Parent-agent desktop repair (not sheep-execute): restored pre-task-2 baseline for >720px — fixed 300×600 board, 180px panels, 50px margins, 90px previews, 200×200 menu buttons; HTML labels (Hold, Score:, Lines:, Upcoming) restored; board.js isMobileLayout() gate so desktop uses fixed BOARD_WIDTH/HEIGHT only. Mobile ≤720px unchanged. Prior acceptance superseded; user re-playtesting. Sync blocked."
+    },
+    {
+      "step": "acceptance",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r6-validation.yaml",
+      "summary": "User accepted (good enough) after re-playtest — desktop >720px baseline restored, mobile responsive layout, all fix rounds and ad-hoc tweaks included."
     }
   ]
 }

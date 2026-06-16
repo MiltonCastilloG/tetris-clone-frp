@@ -20,8 +20,18 @@ const getBoardCanvas = () => document.querySelector('.js-board');
 
 const MIN_CELL_CSS_PX = 13;
 const RESIZE_DEBOUNCE_MS = 125;
+const MOBILE_MAX_WIDTH_PX = 720;
+const MOBILE_RAIL_SLOT_COUNT = 4;
 const MAX_CSS_WIDTH = BOARD_WIDTH;
 const MAX_CSS_HEIGHT = BOARD_HEIGHT;
+const MIN_VERTICAL_INSET_PX = 24;
+const VERTICAL_INSET_VIEWPORT_RATIO = 0.04;
+
+const isMobileLayout = () =>
+  window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH_PX}px)`).matches;
+
+const getUpcomingVisibleSlotCount = () =>
+  isMobileLayout() ? 1 : UPCOMMING_QUEUE_SLOTS;
 
 const createPlayfieldRenderState = () => ({
   lockedMap: LOCKED_MAP.map((row) => [...row]),
@@ -69,6 +79,12 @@ const getViewportSize = () => {
 const getPlayfieldLayoutShell = (board) =>
   board?.closest('.game-container') || board?.parentElement;
 
+const getVerticalInset = (viewportHeight) =>
+  Math.max(
+    MIN_VERTICAL_INSET_PX,
+    Math.round(viewportHeight * VERTICAL_INSET_VIEWPORT_RATIO)
+  );
+
 const measureAvailableBounds = (board) => {
   const shell = getPlayfieldLayoutShell(board);
   if (!shell) return null;
@@ -82,40 +98,71 @@ const measureAvailableBounds = (board) => {
     (Number.parseFloat(shellStyle.paddingBottom) || 0);
 
   const { width: viewportWidth, height: viewportHeight } = getViewportSize();
+  const verticalInset = getVerticalInset(viewportHeight);
   let availableWidth = viewportWidth - paddingX;
-  const availableHeight = viewportHeight - paddingY;
+  const availableHeight = Math.max(
+    0,
+    viewportHeight - paddingY - verticalInset * 2
+  );
 
-  const row = board.closest('.row-container');
-  if (row) {
-    const rowStyle = window.getComputedStyle(row);
-    const isHorizontalLayout =
-      rowStyle.flexDirection === 'row' ||
-      rowStyle.flexDirection === 'row-reverse';
-
-    if (isHorizontalLayout) {
-      const leftSide = row.querySelector('.left-side-container');
-      const rightSide = row.querySelector('.right-side-container');
-      const leftWidth = leftSide?.getBoundingClientRect().width || 0;
-      const rightWidth = rightSide?.getBoundingClientRect().width || 0;
-      availableWidth -= leftWidth + rightWidth;
-
-      const gap = Number.parseFloat(rowStyle.gap) || 0;
-      const panelCount = (leftWidth > 0 ? 1 : 0) + (rightWidth > 0 ? 1 : 0);
-      if (panelCount > 0) {
-        availableWidth -= gap * (panelCount + 1);
-      }
-    }
+  const row = board.closest('.game-layout') || board.closest('.row-container');
+  if (!row) {
+    return { width: Math.max(0, availableWidth), height: availableHeight };
   }
+
+  const rowStyle = window.getComputedStyle(row);
+  const gap = Number.parseFloat(rowStyle.gap) || 0;
+
+  if (isMobileLayout()) {
+    return {
+      width: Math.max(0, availableWidth),
+      height: availableHeight,
+      gap,
+      mobile: true,
+    };
+  }
+
+  const hold = row.querySelector('.panel-hold');
+  const upcoming = row.querySelector('.panel-upcoming');
+  const leftWidth = hold?.getBoundingClientRect().width || 0;
+  const rightWidth = upcoming?.getBoundingClientRect().width || 0;
+  availableWidth -= leftWidth + rightWidth + gap * 2;
 
   return {
     width: Math.max(0, availableWidth),
-    height: Math.max(0, availableHeight),
+    height: availableHeight,
+    mobile: false,
   };
 };
 
-const computePlayfieldCssSize = (availableWidth, availableHeight) => {
+const computePlayfieldCssSize = (
+  availableWidth,
+  availableHeight,
+  { mobile = false, gap = 0 } = {}
+) => {
   if (availableWidth <= 0 || availableHeight <= 0) {
     return { cssWidth: 1, cssHeight: 1 };
+  }
+
+  if (mobile) {
+    const boardWidthRatio =
+      HORIZONTAL_DIMENSIONS / VERTICAL_DIMENSIONS + 1 / MOBILE_RAIL_SLOT_COUNT;
+    const heightFromWidth = (availableWidth - gap) / boardWidthRatio;
+    let cssHeight = Math.min(
+      availableHeight,
+      MAX_CSS_HEIGHT,
+      Math.max(1, heightFromWidth)
+    );
+    let cssWidth =
+      (cssHeight * HORIZONTAL_DIMENSIONS) / VERTICAL_DIMENSIONS;
+    cssWidth = Math.min(cssWidth, MAX_CSS_WIDTH);
+    cssHeight =
+      (cssWidth * VERTICAL_DIMENSIONS) / HORIZONTAL_DIMENSIONS;
+
+    return {
+      cssWidth: Math.max(1, Math.round(cssWidth)),
+      cssHeight: Math.max(1, Math.round(cssHeight)),
+    };
   }
 
   const preferredMinWidth = HORIZONTAL_DIMENSIONS * MIN_CELL_CSS_PX;
@@ -155,6 +202,18 @@ const computePlayfieldCssSize = (availableWidth, availableHeight) => {
   };
 };
 
+const syncMobileSideRail = (board, boardHeight) => {
+  const rail = board.closest('.game-layout')?.querySelector('.side-rail');
+  if (!rail) return;
+
+  const cellSize = Math.max(
+    1,
+    Math.round(boardHeight / MOBILE_RAIL_SLOT_COUNT)
+  );
+  rail.style.height = `${boardHeight}px`;
+  rail.style.width = `${cellSize}px`;
+};
+
 const updateCachedMetrics = (cssWidth, cssHeight, dpr) => {
   const horizontalStep = cssWidth / HORIZONTAL_DIMENSIONS;
   const verticalStep = cssHeight / VERTICAL_DIMENSIONS;
@@ -189,12 +248,23 @@ const refreshPlayfieldLayout = () => {
 
   const { cssWidth, cssHeight } = computePlayfieldCssSize(
     bounds.width,
-    bounds.height
+    bounds.height,
+    { mobile: bounds.mobile, gap: bounds.gap || 0 }
   );
   const dpr = window.devicePixelRatio || 1;
 
   updateCachedMetrics(cssWidth, cssHeight, dpr);
   applyPlayfieldCanvasSize(board, cssWidth, cssHeight, dpr);
+
+  if (bounds.mobile) {
+    syncMobileSideRail(board, cssHeight);
+  } else {
+    const rail = board.closest('.game-layout')?.querySelector('.side-rail');
+    if (rail) {
+      rail.style.height = '';
+      rail.style.width = '';
+    }
+  }
 
   return true;
 };
@@ -221,6 +291,9 @@ const syncPlayfieldMetrics = (board) => {
     board.height = expectedHeight;
     board.style.width = `${cssWidth}px`;
     board.style.height = `${cssHeight}px`;
+    if (isMobileLayout()) {
+      syncMobileSideRail(board, cssHeight);
+    }
   }
 
   return dpr;
@@ -563,15 +636,16 @@ export const addUpcomingTetrominoesToBoard = (tetrominoQueue) => {
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, width, height);
 
+  const visibleSlots = getUpcomingVisibleSlotCount();
   const slotWidth = width;
-  const slotHeight = height / UPCOMMING_QUEUE_SLOTS;
+  const slotHeight = height / visibleSlots;
   const logicalCellSize = Math.floor(
     Math.min(
       slotWidth / UPCOMMING_QUEUE_COLUMNS,
-      slotHeight / (UPCOMMING_QUEUE_ROWS / UPCOMMING_QUEUE_SLOTS)
+      slotHeight / (UPCOMMING_QUEUE_ROWS / visibleSlots)
     )
   );
-  const maxVisible = Math.min(UPCOMMING_QUEUE_SLOTS, tetrominoQueue.length);
+  const maxVisible = Math.min(visibleSlots, tetrominoQueue.length);
 
   for (let slotIndex = 0; slotIndex < maxVisible; slotIndex += 1) {
     const tetrominoData = tetrominoQueue[slotIndex];
@@ -586,7 +660,7 @@ export const addUpcomingTetrominoesToBoard = (tetrominoQueue) => {
     const slotBottom = slotTop + slotHeight;
     const renderedLogicalWidth = logicalCellSize * UPCOMMING_QUEUE_COLUMNS;
     const renderedLogicalHeight =
-      logicalCellSize * (UPCOMMING_QUEUE_ROWS / UPCOMMING_QUEUE_SLOTS);
+      logicalCellSize * (UPCOMMING_QUEUE_ROWS / visibleSlots);
     const slotOffsetX = Math.floor((slotWidth - renderedLogicalWidth) / 2);
     const slotOffsetY = Math.floor(
       slotTop + (slotHeight - renderedLogicalHeight) / 2
@@ -600,7 +674,7 @@ export const addUpcomingTetrominoesToBoard = (tetrominoQueue) => {
     const pieceHeight = Math.max(...ys) - minY + 1;
     const pieceOffsetX = Math.floor((UPCOMMING_QUEUE_COLUMNS - pieceWidth) / 2);
     const pieceOffsetY = Math.floor(
-      (UPCOMMING_QUEUE_ROWS / UPCOMMING_QUEUE_SLOTS - pieceHeight) / 2
+      (UPCOMMING_QUEUE_ROWS / visibleSlots - pieceHeight) / 2
     );
 
     ctx.save();
