@@ -4,7 +4,10 @@
     <title>¡Tetris!</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <link rel="stylesheet" type="text/css" href="./assets/css/index.css" />
   </head>
   <body>
@@ -31,15 +34,12 @@
         <div class="left-side-container">
           <div class="row-container hold-tetromino-container">
             <div class="column-container">
-              <h3>Hold</h3>
               <canvas class="js-hold-tetromino hold-tetromino"></canvas>
             </div>
           </div>
           <div class="row-container score-container">
             <div class="column-container">
-              <h3>Score:</h3>
               <h2 class="js-score score">0</h2>
-              <h3>Lines:</h3>
               <h2 class="js-lines-score score">0</h2>
             </div>
           </div>
@@ -50,7 +50,6 @@
             <div
               class="column-container js-upcomming-tetrominoes upcomming-tetrominoes"
             >
-              <h3>Upcoming</h3>
               <canvas
                 class="js-upcomming-tetromino-queue upcomming-queue"
               ></canvas>

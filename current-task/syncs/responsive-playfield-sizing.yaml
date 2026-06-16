@@ -1,0 +1,35 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: sync-task
+  context: current-task/status.json
+  review: current-task/reviews/responsive-playfield-sizing.yaml
+  validation: current-task/review-validations/r1-validation.yaml
+
+status: synced
+
+commit:
+  status: committed
+  sha: 29219ac4d557d88406e93fe8ae54140698232135
+  branch: feature/responsive-playfield-sizing
+  message: Add responsive playfield sizing for desktop and mobile
+  included_paths:
+    - public/assets/js/board.js
+    - public/assets/css/index.css
+  excluded_paths:
+    - current-task/
+
+pre_push_merge:
+  base: origin/master
+  status: merged
+
+remote:
+  name: origin
+  branch: feature/responsive-playfield-sizing
+
+push:
+  sha: 29219ac4d557d88406e93fe8ae54140698232135
+  upstream: origin/feature/responsive-playfield-sizing
+
+conflicts: []
+user_resolutions: []
+blockers: []

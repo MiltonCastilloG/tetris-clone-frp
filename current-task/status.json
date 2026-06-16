@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "meta": {
+    "schema": "task-status.v1",
+    "generated_by": "status-update",
+    "updated_by": "status-update"
+  },
+  "task": {
+    "id": "2",
+    "slug": "responsive-playfield-sizing",
+    "project": "tetris-clone-frp",
+    "original": "Task #2 from NEXT_STEPS.MD — responsive playfield sizing (desktop + mobile).\n\nCore scope (unchanged):\n- Keep abstract grid dimensions 10x20 unchanged.\n- Compute display scale from viewport/container limits.\n- Update canvas CSS size + backing buffer with DPR.\n- Recompute cell pixel metrics on resize.\n- Keep visuals crisp; avoid layout reads in hot movement paths.\n\nMobile and responsive-canvas requirements:\n- Use visualViewport when available; fall back to window inner dimensions.\n- Respect safe-area-inset-* (notched phones); scale from container bounds in layout shell.\n- Cap max scale on large desktops; enforce minimum readable cell size on narrow phones.\n- Listen for resize, orientationchange, and visualViewport resize; debounce layout reads.\n- touch-action: none on playfield canvas; avoid fixed pixel widths on mobile.\n- Test portrait and landscape; side panel may stack below playfield on narrow breakpoints.\n- Follow responsive-canvas skill best practices for DPR backing store and CSS sizing.\n\nFiles: public/assets/js/board.js, public/assets/css/index.css",
+    "story_artifact": "current-task/story.md",
+    "type": "feature",
+    "current_step": "acceptance",
+    "next_step": "sync",
+    "last_completed_step": "acceptance"
+  },
+  "scope": {
+    "worktree": "responsive-playfield-sizing",
+    "worktree_path": "projects/tetris-clone-frp/worktrees/responsive-playfield-sizing"
+  },
+  "artifacts": {
+    "status": "current-task/status.json",
+    "story": "current-task/story.md",
+    "spec": "current-task/specs/responsive-playfield-sizing.yaml",
+    "subtasks": "current-task/subtasks/responsive-playfield-sizing.md",
+    "execution": "current-task/executions/responsive-playfield-sizing.yaml",
+    "review": "current-task/reviews/responsive-playfield-sizing.yaml",
+    "review_validation": "current-task/review-validations/r6-validation.yaml",
+    "sync": "current-task/syncs/responsive-playfield-sizing.yaml",
+    "integrate": "current-task/integrates/responsive-playfield-sizing.yaml",
+    "next_steps": [
+      "current-task/next-steps/mobile-upcoming-queue.yaml",
+      "current-task/next-steps/mobile-game-controls.yaml",
+      "current-task/next-steps/mobile-lines-score.yaml",
+      "current-task/next-steps/phone-controls.yaml"
+    ]
+  },
+  "constraints": ["no-commit", "no-new-deps"],
+  "open_questions": [],
+  "history": [
+    {
+      "step": "start",
+      "status": "complete",
+      "artifact": "current-task/status.json",
+      "summary": "Worktree created from master @ 9856100; task 2 registered; stale board-renderer-state worktree pruned."
+    },
+    {
+      "step": "start",
+      "status": "complete",
+      "artifact": "current-task/status.json",
+      "summary": "Worktree already existed on feature/responsive-playfield-sizing from master @ 9856100; task 2 registered (skipped re-register)."
+    },
+    {
+      "step": "describe",
+      "status": "skipped",
+      "artifact": "current-task/status.json",
+      "summary": "Refined task.original with mobile viewport, safe-area, touch-action, orientation/resize, visualViewport, and responsive-canvas practices. Story draft pending user approval."
+    },
+    {
+      "step": "describe",
+      "status": "complete",
+      "artifact": "current-task/story.md",
+      "summary": "User approved mobile-aware Gherkin story; story.md written."
+    },
+    {
+      "step": "spec",
+      "status": "complete",
+      "artifact": "current-task/specs/responsive-playfield-sizing.yaml",
+      "summary": "14 requirements for responsive playfield sizing (desktop + mobile): viewport/container scale, visualViewport, DPR, safe-area, touch-action, debounced resize, cached hot-path metrics."
+    },
+    {
+      "step": "subtasks",
+      "status": "complete",
+      "artifact": "current-task/subtasks/responsive-playfield-sizing.md",
+      "summary": "17-line subtask checklist for responsive playfield sizing (mobile viewport, safe-area, touch-action, visualViewport, debounced resize, DPR, cached hot-path metrics); gates clear."
+    },
+    {
+      "step": "execute",
+      "status": "complete",
+      "artifact": "current-task/executions/responsive-playfield-sizing.yaml",
+      "summary": "Responsive playfield sizing implemented in board.js and index.css — viewport/container scale with visualViewport fallback, DPR-backed canvas, min cell (13px) and max (300×600) caps, debounced resize listeners (125ms), cached hot-path metrics, safe-area padding, touch-action none, and 720px column stacking. All 17 subtasks checked; eslint passed."
+    },
+    {
+      "step": "review",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r1-validation.yaml",
+      "summary": "Review approved — all requirements met, lint passed, ready for acceptance."
+    },
+    {
+      "step": "acceptance",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r1-validation.yaml",
+      "summary": "User accepted work after review — all 14 requirements met, lint passed."
+    },
+    {
+      "step": "sync",
+      "status": "complete",
+      "artifact": "current-task/syncs/responsive-playfield-sizing.yaml",
+      "summary": "Committed 29219ac (board.js, index.css); merged origin/master (up to date); pushed feature/responsive-playfield-sizing to origin."
+    },
+    {
+      "step": "integrate",
+      "status": "complete",
+      "artifact": "current-task/integrates/responsive-playfield-sizing.yaml",
+      "summary": "Merged feature/responsive-playfield-sizing into master (merge commit 45da06f); pushed origin/master. 2 files changed (board.js, index.css)."
+    },
+    {
+      "step": "fix",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r2-validation.yaml",
+      "summary": "User rejected post-integrate outcome; fix_required recorded with r2-validation and ## Fix subtasks for layout and viewport fixes."
+    },
+    {
+      "step": "execute",
+      "status": "complete",
+      "artifact": "current-task/executions/responsive-playfield-sizing.yaml",
+      "summary": "Fix-2: compact panels (48px canvases, no labels/margins), single-screen horizontal layout, viewport-fit=cover, visibility MutationObserver refresh, min-cell scales below 130×260 when needed. Touched board.js, index.css, index.html. Lint passed."
+    },
+    {
+      "step": "review",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r3-validation.yaml",
+      "summary": "Fix-2 code approved. All ## Fix items met in board.js/index.css/index.html. User browser playtest (resize, portrait, DPR, orientation) pending before acceptance."
+    },
+    {
+      "step": "fix",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r4-validation.yaml",
+      "summary": "User direction after playtest — mobile shows only playfield+hold+score; main menu full-width buttons and no scroll. fix_required r4 recorded."
+    },
+    {
+      "step": "execute",
+      "status": "complete",
+      "artifact": "current-task/executions/responsive-playfield-sizing.yaml",
+      "summary": "Fix-3: mobile ≤720px hides right-side-container (upcoming, pause, upload) and lines score; desktop unchanged. Menu 100dvh no-scroll shell with 100%-width flex buttons. CSS-only; lint passed."
+    },
+    {
+      "step": "review",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r5-validation.yaml",
+      "summary": "Fix-3 mobile hide CSS and menu button width pass static review; menu scroll blocked by hidden game-container min-height 100dvh (fix_required). User browser playtest pending for mobile layout acceptance."
+    },
+    {
+      "step": "fix",
+      "status": "skipped",
+      "artifact": "current-task/next-steps/mobile-upcoming-queue.yaml",
+      "summary": "Deferred mobile UI follow-ups documented (upcoming queue, game controls, lines score, phone controls) as 4 next-step specs from task #2."
+    },
+    {
+      "step": "execute",
+      "status": "complete",
+      "artifact": "current-task/executions/responsive-playfield-sizing.yaml",
+      "summary": "Fix-4: CSS collapses visibility:hidden .game-container (height/min-height 0) so hidden game shell no longer stacks 100dvh under menu. Full height restores when game visible. Lint passed."
+    },
+    {
+      "step": "review",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r6-validation.yaml",
+      "summary": "Fix-4 menu scroll fix approved static review; ready_for_acceptance pending user browser playtest for mobile layout."
+    },
+    {
+      "step": "acceptance",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r6-validation.yaml",
+      "summary": "User playtested and accepted responsive-playfield-sizing including fix rounds 2-4 and ad-hoc tweaks: board.js removed side-panel height cap in measureAvailableBounds; index.css menu buttons clamp height, board flex-shrink 0, desktop min-width 721px restores 90px previews."
+    }
+  ]
+}

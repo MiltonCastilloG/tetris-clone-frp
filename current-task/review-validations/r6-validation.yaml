@@ -1,0 +1,20 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: validation
+  review: current-task/reviews/responsive-playfield-sizing.yaml
+decision: valid
+valid_findings: []
+deferred_findings: []
+discarded_findings: []
+next_steps: []
+review_inputs: []
+readiness:
+  status: ready_for_acceptance
+  recommended_next_step: acceptance
+  blockers: []
+summary: >
+  Fix-4 menu scroll fix passes static review: hidden game-container no longer
+  reserves 100dvh while menu is shown; full height restores when visibility
+  becomes visible; Fix-3 mobile hide rules unchanged. Lint passed. User browser
+  playtest pending for mobile layout, DPR, and resize/orientation acceptance
+  verification before final sign-off.

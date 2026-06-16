@@ -1,0 +1,174 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: spec-maker
+  branch: feature/responsive-playfield-sizing
+  context: current-task/status.json
+  task: |
+    Feature: Responsive playfield sizing (desktop and mobile)
+
+      As a player on any device
+      I want the Tetris playfield to scale to my screen and orientation
+      So that the game fits comfortably, stays sharp, and does not fight touch scrolling
+
+      Background:
+        Given the abstract grid is 10 columns by 20 rows
+        And game logic uses abstract grid coordinates only
+
+      Scenario: Playfield scales from container and viewport limits
+        Given the playfield sits inside a layout container
+        When the browser viewport or container size changes
+        Then display scale is computed from container bounds and viewport limits
+        And visualViewport dimensions are used when available
+        And canvas CSS size and DPR backing buffer are updated together
+        And cell pixel metrics are recomputed on resize
+
+      Scenario: Mobile portrait on a narrow phone
+        Given the device is in portrait with a narrow viewport
+        When the playfield is laid out
+        Then cell size meets a minimum readable size on small screens
+        And safe-area-inset padding is respected for notched devices
+        And the canvas uses touch-action none so play does not steal page scroll
+        And side panels stack below the playfield when space is tight
+
+      Scenario: Orientation change and visualViewport resize
+        Given the game is running on a mobile browser
+        When the device rotates between portrait and landscape
+        Or when the visualViewport resizes (e.g. mobile browser chrome)
+        Then scale and cell metrics are recomputed after a debounced resize
+        And the abstract grid remains 10x20
+
+      Scenario: Crisp rendering at high DPR
+        Given a display with devicePixelRatio greater than 1
+        When the canvas is resized
+        Then backing store dimensions equal CSS size times DPR (rounded)
+        And block and grid visuals remain sharp without blur
+
+      Scenario: No layout reads in hot movement paths
+        Given a piece is falling or moving on the board
+        When the game tick runs movement and rendering
+        Then cached cell metrics from render state are used
+        And getBoundingClientRect and other layout reads are not called per tick
+
+title: Responsive playfield sizing
+type: feature
+
+summary: >
+  Size the Tetris playfield canvas from container and viewport limits on desktop
+  and mobile so the game fits the screen, stays sharp at high DPR, respects safe
+  areas and touch behavior, and recomputes layout only on debounced resize events
+  while keeping the abstract 10×20 grid and game logic unchanged.
+
+requirements:
+  - id: abstract-grid-unchanged
+    description: >
+      Game logic continues to use abstract 10-column by 20-row grid coordinates;
+      responsive sizing affects display scale and pixel metrics only.
+
+  - id: scale-from-container-viewport
+    description: >
+      Display scale is derived from the playfield layout container bounds combined
+      with viewport limits, not from fixed pixel dimensions.
+
+  - id: visual-viewport-fallback
+    description: >
+      When visualViewport is available, its width and height inform scale
+      computation; otherwise window inner dimensions are used.
+
+  - id: css-and-dpr-together
+    description: >
+      On each resize, canvas CSS pixel size and backing-store width/height are
+      updated together so backing dimensions equal CSS size times devicePixelRatio
+      (rounded to integers).
+
+  - id: cell-metrics-on-resize
+    description: >
+      Cell width and height in CSS pixels are recomputed from the CSS grid size
+      divided by abstract column and row counts whenever layout is refreshed.
+
+  - id: desktop-scale-cap
+    description: >
+      On large desktop viewports, display scale is capped so the playfield does
+      not grow beyond a comfortable maximum size.
+
+  - id: mobile-min-cell-size
+    description: >
+      On narrow phone viewports, cell size enforces a minimum readable size
+      (approximately 12–14 CSS pixels per cell or equivalent constraint).
+
+  - id: safe-area-insets
+    description: >
+      Layout respects safe-area-inset padding for notched devices so the
+      playfield and surrounding shell are not clipped under system UI.
+
+  - id: touch-action-none
+    description: >
+      The playfield canvas prevents default touch scrolling during play so
+      gestures do not steal page scroll.
+
+  - id: responsive-layout-shell
+    description: >
+      Mobile layout avoids fixed pixel widths on the playfield area; the playfield
+      scales within its container using fluid constraints (e.g. max-width 100%,
+      height auto, centered in flex or grid).
+
+  - id: narrow-breakpoint-stacking
+    description: >
+      On narrow breakpoints, side panels stack below the playfield when horizontal
+      space is insufficient for side-by-side layout.
+
+  - id: debounced-resize-listeners
+    description: >
+      Scale and cell metrics refresh in response to window resize,
+      orientationchange, and visualViewport resize events, with layout reads
+      debounced (approximately 100–150 ms) to avoid thrashing.
+
+  - id: cached-metrics-hot-path
+    description: >
+      Per-tick movement and rendering use cached cell metrics from render state;
+      layout reads such as getBoundingClientRect are not performed during hot
+      game ticks.
+
+  - id: crisp-high-dpr
+    description: >
+      After resize on displays with devicePixelRatio greater than 1, block and
+      grid visuals render sharply without blur from mismatched CSS and backing
+      store dimensions.
+
+scope:
+  in:
+    - Playfield canvas display sizing and DPR-backed rendering
+    - Layout container responsive behavior around the playfield
+    - Resize, orientation, and visualViewport handling for scale refresh
+    - Mobile safe-area, touch-action, and narrow-breakpoint stacking
+    - Cached pixel metrics for movement and render hot paths
+  out:
+    - Changes to abstract grid dimensions or core game rules
+    - New npm or runtime dependencies
+    - Unrelated pages, menus, or non-playfield UI
+    - Preview or auxiliary canvases outside the main playfield
+    - Automated test suite additions unless required for acceptance verification
+
+constraints:
+  - no-commit
+  - no-new-deps
+
+acceptance:
+  - Abstract grid remains 10×20 in game logic after any viewport change
+  - Resizing the browser or rotating a mobile emulator recomputes scale and cell metrics; grid stays logically 10×20
+  - visualViewport dimensions drive scale when available; window inner dimensions used as fallback
+  - Canvas CSS size and backing-store dimensions stay in sync with devicePixelRatio after resize
+  - Playfield is sharp on 2× and 3× DPR displays with no post-resize blur
+  - Narrow portrait phone layout shows minimum readable cell size and respects safe-area insets
+  - Playfield touch interaction does not cause unintended page scroll
+  - Side panels stack below the playfield on narrow breakpoints
+  - Orientation change and mobile browser chrome resize trigger debounced metric refresh
+  - Piece movement ticks do not invoke layout reads; cached render-state metrics are used
+  - Desktop wide viewport does not produce an oversized playfield beyond the scale cap
+
+assumptions:
+  - Playfield already sits inside a layout shell with side panels; only responsive stacking and sizing behavior change
+  - Existing render-state structure can hold cached cell metrics refreshed on resize
+  - Debounce interval in the 100–150 ms range is acceptable for resize responsiveness
+  - Minimum readable cell size target aligns with responsive-canvas guidance (~12–14 CSS px)
+
+open_questions: []

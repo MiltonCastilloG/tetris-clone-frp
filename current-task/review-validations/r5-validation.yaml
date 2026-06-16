@@ -1,0 +1,25 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: validation
+  review: current-task/reviews/responsive-playfield-sizing.yaml
+decision: partially_valid
+valid_findings:
+  - id: f1
+    source: "[subtask:29] Main menu still scrolls vertically before game start: .js-game-container keeps visibility:hidden in HTML but .game-container min-height 100dvh still occupies document flow below the 100dvh menu shell, yielding ~200dvh body height regardless of .js-menu-container overflow:hidden."
+    prefix: subtask
+    reason: Fix round 2 menu viewport requirement not met — hidden game container reserves full viewport height.
+deferred_findings: []
+discarded_findings: []
+next_steps: []
+review_inputs: []
+readiness:
+  status: fix_required
+  recommended_next_step: execute
+  blockers:
+    - hidden game-container min-height 100dvh causes vertical body scroll on main menu before game starts
+  fix_subtasks:
+    - Prevent hidden game-container from reserving viewport height while menu is shown so main menu fits without vertical scroll
+summary: >
+  Fix-3 mobile hide rules and full-width menu buttons pass static review. Menu no-scroll
+  still blocked because visibility:hidden game-container retains min-height 100dvh in document
+  flow. User browser playtest pending for acceptance verification of mobile layout and resize/DPR checks.

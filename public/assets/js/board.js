@@ -73,10 +73,17 @@ const measureAvailableBounds = (board) => {
   const shell = getPlayfieldLayoutShell(board);
   if (!shell) return null;
 
-  const shellRect = shell.getBoundingClientRect();
+  const shellStyle = window.getComputedStyle(shell);
+  const paddingX =
+    (Number.parseFloat(shellStyle.paddingLeft) || 0) +
+    (Number.parseFloat(shellStyle.paddingRight) || 0);
+  const paddingY =
+    (Number.parseFloat(shellStyle.paddingTop) || 0) +
+    (Number.parseFloat(shellStyle.paddingBottom) || 0);
+
   const { width: viewportWidth, height: viewportHeight } = getViewportSize();
-  let availableWidth = Math.min(shellRect.width, viewportWidth);
-  const availableHeight = Math.min(shellRect.height, viewportHeight);
+  let availableWidth = viewportWidth - paddingX;
+  const availableHeight = viewportHeight - paddingY;
 
   const row = board.closest('.row-container');
   if (row) {
@@ -88,18 +95,14 @@ const measureAvailableBounds = (board) => {
     if (isHorizontalLayout) {
       const leftSide = row.querySelector('.left-side-container');
       const rightSide = row.querySelector('.right-side-container');
-      if (leftSide) {
-        availableWidth -= leftSide.getBoundingClientRect().width;
-      }
-      if (rightSide) {
-        availableWidth -= rightSide.getBoundingClientRect().width;
-      }
+      const leftWidth = leftSide?.getBoundingClientRect().width || 0;
+      const rightWidth = rightSide?.getBoundingClientRect().width || 0;
+      availableWidth -= leftWidth + rightWidth;
 
       const gap = Number.parseFloat(rowStyle.gap) || 0;
-      if (leftSide && rightSide) {
-        availableWidth -= gap * 2;
-      } else if (leftSide || rightSide) {
-        availableWidth -= gap;
+      const panelCount = (leftWidth > 0 ? 1 : 0) + (rightWidth > 0 ? 1 : 0);
+      if (panelCount > 0) {
+        availableWidth -= gap * (panelCount + 1);
       }
     }
   }
@@ -111,23 +114,40 @@ const measureAvailableBounds = (board) => {
 };
 
 const computePlayfieldCssSize = (availableWidth, availableHeight) => {
-  const minWidth = HORIZONTAL_DIMENSIONS * MIN_CELL_CSS_PX;
-  const minHeight = VERTICAL_DIMENSIONS * MIN_CELL_CSS_PX;
+  if (availableWidth <= 0 || availableHeight <= 0) {
+    return { cssWidth: 1, cssHeight: 1 };
+  }
 
-  let cssWidth = availableWidth;
+  const preferredMinWidth = HORIZONTAL_DIMENSIONS * MIN_CELL_CSS_PX;
+  const preferredMinHeight = VERTICAL_DIMENSIONS * MIN_CELL_CSS_PX;
+  const canHonorPreferredMin =
+    availableWidth >= preferredMinWidth &&
+    availableHeight >= preferredMinHeight;
+
+  let cssWidth = Math.min(availableWidth, MAX_CSS_WIDTH);
   let cssHeight = (cssWidth * VERTICAL_DIMENSIONS) / HORIZONTAL_DIMENSIONS;
 
-  if (cssHeight > availableHeight) {
-    cssHeight = availableHeight;
+  if (cssHeight > Math.min(availableHeight, MAX_CSS_HEIGHT)) {
+    cssHeight = Math.min(availableHeight, MAX_CSS_HEIGHT);
     cssWidth = (cssHeight * HORIZONTAL_DIMENSIONS) / VERTICAL_DIMENSIONS;
   }
 
-  cssWidth = Math.max(cssWidth, minWidth);
-  cssHeight = Math.max(cssHeight, minHeight);
+  if (canHonorPreferredMin) {
+    cssWidth = Math.max(cssWidth, preferredMinWidth);
+    cssHeight = Math.max(cssHeight, preferredMinHeight);
+
+    if (cssHeight > availableHeight) {
+      cssHeight = availableHeight;
+      cssWidth = (cssHeight * HORIZONTAL_DIMENSIONS) / VERTICAL_DIMENSIONS;
+    }
+    if (cssWidth > availableWidth) {
+      cssWidth = availableWidth;
+      cssHeight = (cssWidth * VERTICAL_DIMENSIONS) / HORIZONTAL_DIMENSIONS;
+    }
+  }
+
   cssWidth = Math.min(cssWidth, MAX_CSS_WIDTH);
   cssHeight = Math.min(cssHeight, MAX_CSS_HEIGHT);
-  cssWidth = Math.max(cssWidth, minWidth);
-  cssHeight = Math.max(cssHeight, minHeight);
 
   return {
     cssWidth: Math.max(1, Math.round(cssWidth)),
@@ -648,9 +668,32 @@ const bindPlayfieldResizeListeners = () => {
   }
 };
 
+const isGameContainerVisible = (shell) => {
+  if (!shell) return false;
+  const style = window.getComputedStyle(shell);
+  return style.visibility !== 'hidden' && style.display !== 'none';
+};
+
+const bindGameContainerVisibilityObserver = () => {
+  const shell = document.querySelector('.game-container');
+  if (!shell) return;
+
+  const refreshWhenVisible = () => {
+    if (!isGameContainerVisible(shell)) return;
+    schedulePlayfieldLayoutRefresh();
+  };
+
+  const observer = new MutationObserver(refreshWhenVisible);
+  observer.observe(shell, {
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  });
+};
+
 const initPlayfieldLayout = () => {
   refreshPlayfieldLayout();
   bindPlayfieldResizeListeners();
+  bindGameContainerVisibilityObserver();
 };
 
 if (typeof window !== 'undefined') {
