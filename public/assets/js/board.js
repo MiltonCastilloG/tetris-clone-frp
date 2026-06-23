@@ -14,6 +14,7 @@ import {
   UPCOMMING_TETROMINO_QUEUE,
 } from './config/selectors.js';
 import { isSpaceFilled } from './utils.js';
+import { checkBlocksCollision } from './collision.js';
 import { colorFactory } from './lib/tetrominoes.js';
 
 const getBoardCanvas = () => document.querySelector('.js-board');
@@ -395,6 +396,32 @@ const drawLockedLayer = (ctx, renderState) => {
   });
 };
 
+const canBlocksMoveDown = (blocks, lockedMap) =>
+  checkBlocksCollision(
+    blocks.map(({ y, x }) => ({ y: y + 1, x })),
+    lockedMap
+  );
+
+const computeGhostBlocks = (fallingBlocks, lockedMap) => {
+  if (!fallingBlocks.length) return [];
+
+  let ghost = fallingBlocks.map((block) => ({ ...block }));
+
+  while (canBlocksMoveDown(ghost, lockedMap)) {
+    ghost = ghost.map(({ y, x }) => ({ y: y + 1, x }));
+  }
+
+  return ghost;
+};
+
+const updateGhostBlocks = () => {
+  const { fallingBlocks, lockedMap } = playfieldRenderState;
+  playfieldRenderState.ghostBlocks = computeGhostBlocks(
+    fallingBlocks,
+    lockedMap
+  );
+};
+
 const drawGhostLayer = (ctx, renderState) => {
   const {
     ghostBlocks,
@@ -579,6 +606,7 @@ const drawHoldTetromino = (holdTetromino) => {
 export const drawBoard = () => {
   const ctx = getBoardContext();
   if (!ctx) return;
+  updateGhostBlocks();
   const nowMs = Date.now();
   const { cssWidth, cssHeight } = playfieldRenderState;
 

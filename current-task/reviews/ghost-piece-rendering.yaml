@@ -1,0 +1,7 @@
+approved: true
+content: |
+  All spec requirements met (ghost-board-only, ghost-draw-order, ghost-opacity, ghost-hard-drop-position, ghost-at-rest-overlap, ghost-recompute-on-change, ghost-hidden-without-piece).
+  board.js adds computeGhostBlocks/updateGhostBlocks using checkBlocksCollision downward steps; updateGhostBlocks runs at the start of each drawBoard. Draw order remains background/grid, locked, ghost, falling; drawGhostCell uses 0.28 alpha.
+  Ghost simulation matches game.js hard-drop collision semantics (dy+1 via checkBlocksCollision); at-rest ghost equals fallingBlocks; empty fallingBlocks yields no ghost cells.
+  All 10 subtasks checked and verified against diff and source. Only application change is public/assets/js/board.js; game.js untouched; no new dependencies.
+  Verify: pnpm run lint passed (exit 0).
