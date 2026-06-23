@@ -1,7 +1,7 @@
 meta:
-  worktree: responsive-playfield-sizing
+  worktree: ghost-piece-rendering
   generated_by: validation
-  review: current-task/reviews/responsive-playfield-sizing.yaml
+  review: current-task/reviews/ghost-piece-rendering.yaml
 decision: valid
 valid_findings: []
 deferred_findings: []
@@ -13,5 +13,5 @@ readiness:
   recommended_next_step: acceptance
   blockers: []
 summary: >
-  Review approved with no blocking findings. Responsive playfield sizing meets all spec
-  requirements and subtasks; lint passed. Ready for acceptance.
+  Review approved with no blocking or deferred findings. Ghost piece rendering in board.js
+  meets all spec requirements; lint passed; ready for acceptance.

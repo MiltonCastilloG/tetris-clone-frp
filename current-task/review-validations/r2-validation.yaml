@@ -1,51 +1,22 @@
 meta:
-  worktree: responsive-playfield-sizing
+  worktree: ghost-piece-rendering
   generated_by: validation
-  review: current-task/reviews/responsive-playfield-sizing.yaml
-decision: partially_valid
-valid_findings:
-  - id: f1
-    source: "[verify] review relied on lint-only checks; manual layout verification not performed"
-    prefix: verify
-    reason: User rejected post-integrate outcome — weak lint-only review.
-  - id: f2
-    source: "[verify] layout overflow on narrow viewports; board exceeds visible area"
-    prefix: verify
-    reason: User rejected — layout overflow.
-  - id: f3
-    source: "[verify] side panels too tall (180px+ margin blocks) instead of preview-canvas height"
-    prefix: verify
-    reason: User rejected — side panels too tall.
-  - id: f4
-    source: "[verify] side panel text labels (Hold, Score:, Lines:, Upcoming) should be removed"
-    prefix: verify
-    reason: User rejected — labels on panels.
-  - id: f5
-    source: "[subtask] manual verify subtasks falsely marked done despite layout defects"
-    prefix: subtask
-    reason: User rejected — manual verify falsely marked done.
-deferred_findings: []
+  review: current-task/reviews/ghost-piece-rendering.yaml
+decision: valid
+valid_findings: []
+deferred_findings:
+  - id: d1
+    source: "[scope] public/assets/js/game.js input-handler changes are outside ghost-piece-rendering spec scope.out; user-approved incremental override after sync."
+    prefix: scope
+    reason: Out-of-spec input changes; non-blocking per user override.
 discarded_findings: []
 next_steps: []
 review_inputs: []
 readiness:
-  status: fix_required
-  recommended_next_step: execute
-  blockers:
-    - weak lint-only review — layout not manually verified
-    - layout overflow on narrow viewports
-    - side panels too tall (180px+ margin blocks)
-    - side panel text labels remain (Hold, Score:, Lines:, Upcoming)
-    - manual verify subtasks falsely marked done
-  fix_subtasks:
-    - Compact side panels to minimal height — sized to preview canvases only, not tall 180px+ margin blocks
-    - "Single-screen layout: playfield, hold, upcoming, and score visible together without panels stacking off-screen"
-    - Remove all side panel text labels (Hold, Score:, Lines:, Upcoming) — canvases and numeric values only
-    - Refresh playfield layout when game container becomes visible, not only at DOMContentLoaded while hidden
-    - Fix min-cell sizing so board fits viewports smaller than 130×260 without overflow
-    - Add viewport-fit=cover to index.html meta viewport for iOS safe-area insets
-    - "Compact side panel CSS: reduce fixed widths and margins; panels fit preview canvas dimensions"
+  status: ready_for_acceptance
+  recommended_next_step: acceptance
+  deferred_scope: true
+  blockers: []
 summary: >
-  User rejected post-integrate outcome (45da06f). Review was lint-only; manual layout
-  verification subtasks were marked done despite overflow, oversized side panels, and
-  remaining text labels. Fix loop iteration 2 — route to execute.
+  Incremental keybinding and docs work approved; ghost rendering intact from prior sync.
+  game.js input changes noted as deferred out-of-spec scope; ready for acceptance (integrate deferred per user).

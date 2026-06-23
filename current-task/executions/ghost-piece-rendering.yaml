@@ -1,0 +1,72 @@
+meta:
+  worktree: ghost-piece-rendering
+  generated_by: execute-plan
+  subtasks: user-override-incremental
+  context: current-task/status.json
+  status: complete
+  constraints: [no-commit, no-new-deps, no-integrate]
+
+paths:
+  created: []
+  modified:
+    - public/assets/js/game.js
+    - public/index.html
+    - public/assets/css/index.css
+    - README.md
+    - NEXT_STEPS.MD
+    - current-task/story.md
+    - current-task/specs/ghost-piece-rendering.yaml
+  deleted: []
+  unplanned: []
+
+subtasks:
+  - index: 1
+    text: Change hold key from C to D in game.js.
+    status: done
+    checked: true
+    paths: [public/assets/js/game.js]
+    note: KeyC hold filter replaced with KeyD (isD / dKeyDowns).
+  - index: 2
+    text: Bind Space to pause/unpause using existing pause toggle stream.
+    status: done
+    checked: true
+    paths: [public/assets/js/game.js]
+    note: pauseGame merges pause button clicks and Space keydowns; Space removed from hard drop; preventDefault on Space.
+  - index: 3
+    text: Update on-screen help and relevant docs for new bindings.
+    status: done
+    checked: true
+    paths:
+      - public/index.html
+      - public/assets/css/index.css
+      - README.md
+      - NEXT_STEPS.MD
+      - current-task/story.md
+      - current-task/specs/ghost-piece-rendering.yaml
+    note: Menu controls-help paragraph added; README controls section; NEXT_STEPS item 7; hard-drop refs now Arrow Up only.
+  - index: 4
+    text: Run pnpm run lint and fix any issues.
+    status: done
+    checked: true
+    note: pnpm run lint exit 0.
+
+verify:
+  - command: pnpm run lint
+    exit: 0
+    passed: true
+
+deviations:
+  - kind: user_approved
+    note: User override skipped subtask list; incremental keybinding/docs work on existing feature branch after sync.
+
+open_questions: []
+
+hotspots:
+  - path: public/assets/js/game.js
+    reason: pause-stream-merge-space-hard-drop-removal
+
+review_scope:
+  mode: focused
+  focus_paths:
+    - public/assets/js/game.js
+    - public/index.html

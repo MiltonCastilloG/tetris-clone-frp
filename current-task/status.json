@@ -2,14 +2,14 @@
   "version": 1,
   "meta": {
     "schema": "task-status.v1",
-    "generated_by": "status-update",
+    "generated_by": "create-worktree.py",
     "updated_by": "status-update"
   },
   "task": {
-    "id": "2",
-    "slug": "responsive-playfield-sizing",
+    "id": "tetris-clone-frp:1",
+    "slug": "ghost-piece-rendering",
     "project": "tetris-clone-frp",
-    "original": "Task #2 from NEXT_STEPS.MD — responsive playfield sizing (desktop + mobile).\n\nCore scope (unchanged):\n- Keep abstract grid dimensions 10x20 unchanged.\n- Compute display scale from viewport/container limits.\n- Update canvas CSS size + backing buffer with DPR.\n- Recompute cell pixel metrics on resize.\n- Keep visuals crisp; avoid layout reads in hot movement paths.\n\nMobile and responsive-canvas requirements:\n- Use visualViewport when available; fall back to window inner dimensions.\n- Respect safe-area-inset-* (notched phones); scale from container bounds in layout shell.\n- Cap max scale on large desktops; enforce minimum readable cell size on narrow phones.\n- Listen for resize, orientationchange, and visualViewport resize; debounce layout reads.\n- touch-action: none on playfield canvas; avoid fixed pixel widths on mobile.\n- Test portrait and landscape; side panel may stack below playfield on narrow breakpoints.\n- Follow responsive-canvas skill best practices for DPR backing store and CSS sizing.\n\nFiles: public/assets/js/board.js, public/assets/css/index.css",
+    "original": "Implement ghost piece rendering.\n\nStatus: Partial. Task 1 added ghostBlocks state and drawGhostLayer; nothing populates ghostBlocks yet. Blocks validation item \"Ghost always matches rest position\" in step 8.\n\nFile: public/assets/js/board.js\n\nActions:\n- Compute ghost from current falling blocks + locked map: simulate downward movement until next step collides.\n- Draw order: 1) background/grid 2) locked blocks 3) ghost (low alpha) 4) active falling piece\n- Recompute ghost whenever falling piece/map changes.\n\nDomain decision: Ghost piece rest position = same as hard drop rest position for the active piece.",
     "story_artifact": "current-task/story.md",
     "type": "feature",
     "current_step": "acceptance",
@@ -17,166 +17,96 @@
     "last_completed_step": "acceptance"
   },
   "scope": {
-    "worktree": "responsive-playfield-sizing",
-    "worktree_path": "projects/tetris-clone-frp/worktrees/responsive-playfield-sizing"
+    "worktree": "tetris-clone-frp-ghost-piece-rendering",
+    "worktree_path": "worktrees/tetris-clone-frp-ghost-piece-rendering"
   },
   "artifacts": {
     "status": "current-task/status.json",
     "story": "current-task/story.md",
-    "spec": "current-task/specs/responsive-playfield-sizing.yaml",
-    "subtasks": "current-task/subtasks/responsive-playfield-sizing.md",
-    "execution": "current-task/executions/responsive-playfield-sizing.yaml",
-    "review": "current-task/reviews/responsive-playfield-sizing.yaml",
-    "review_validation": "current-task/review-validations/r6-validation.yaml",
-    "sync": "current-task/syncs/responsive-playfield-sizing.yaml",
-    "integrate": "current-task/integrates/responsive-playfield-sizing.yaml",
-    "next_steps": [
-      "current-task/next-steps/mobile-upcoming-queue.yaml",
-      "current-task/next-steps/mobile-game-controls.yaml",
-      "current-task/next-steps/mobile-lines-score.yaml",
-      "current-task/next-steps/phone-controls.yaml"
-    ]
+    "spec": "current-task/specs/ghost-piece-rendering.yaml",
+    "subtasks": "current-task/subtasks/ghost-piece-rendering.md",
+    "execution": "current-task/executions/ghost-piece-rendering.yaml",
+    "review": "current-task/reviews/ghost-piece-rendering.yaml",
+    "review_validation": "current-task/review-validations/r2-validation.yaml",
+    "sync": "current-task/syncs/ghost-piece-rendering.yaml"
   },
-  "constraints": ["no-commit", "no-new-deps"],
+  "constraints": [
+    "no-commit",
+    "no-new-deps"
+  ],
   "open_questions": [],
   "history": [
     {
       "step": "start",
       "status": "complete",
       "artifact": "current-task/status.json",
-      "summary": "Worktree created from master @ 9856100; task 2 registered; stale board-renderer-state worktree pruned."
-    },
-    {
-      "step": "start",
-      "status": "complete",
-      "artifact": "current-task/status.json",
-      "summary": "Worktree already existed on feature/responsive-playfield-sizing from master @ 9856100; task 2 registered (skipped re-register)."
+      "summary": "Worktree was created and task context initialized."
     },
     {
       "step": "describe",
-      "status": "skipped",
-      "artifact": "current-task/status.json",
-      "summary": "Refined task.original with mobile viewport, safe-area, touch-action, orientation/resize, visualViewport, and responsive-canvas practices. Story draft pending user approval."
+      "status": "blocked",
+      "artifact": null,
+      "summary": "Partial implementation: ghostBlocks state + drawGhostLayer exist; nothing populates ghostBlocks yet. Domain: ghost rest = hard-drop rest (game.js hard drop loops canCurrentTetrominoMoveDown then settles). Draft Feature with 3 scenarios (+ at-rest behavior TBD). Awaiting user answers and approval before writing story.md."
     },
     {
       "step": "describe",
       "status": "complete",
       "artifact": "current-task/story.md",
-      "summary": "User approved mobile-aware Gherkin story; story.md written."
+      "summary": "Persisted approved Gherkin story (4 scenarios). Defaults applied without explicit user answers: board.js-only ghost from fallingBlocks+lockedMap on redraw; at-rest ghost overlaps active piece; drawGhostCell ~0.28 alpha; hide ghost only when fallingBlocks is empty."
     },
     {
       "step": "spec",
       "status": "complete",
-      "artifact": "current-task/specs/responsive-playfield-sizing.yaml",
-      "summary": "14 requirements for responsive playfield sizing (desktop + mobile): viewport/container scale, visualViewport, DPR, safe-area, touch-action, debounced resize, cached hot-path metrics."
+      "artifact": "current-task/specs/ghost-piece-rendering.yaml",
+      "summary": "7 requirements, feature, scope bounded to board renderer only (no game-loop changes). Describe defaults recorded in assumptions. Lint in acceptance."
     },
     {
       "step": "subtasks",
       "status": "complete",
-      "artifact": "current-task/subtasks/responsive-playfield-sizing.md",
-      "summary": "17-line subtask checklist for responsive playfield sizing (mobile viewport, safe-area, touch-action, visualViewport, debounced resize, DPR, cached hot-path metrics); gates clear."
+      "artifact": "current-task/subtasks/ghost-piece-rendering.md",
+      "summary": "Ghost draw order, drawGhostCell opacity, and drawGhostLayer already exist; ghostBlocks is never populated. Checklist verifies those first, then implements downward simulation and per-redraw recompute in the board renderer only."
     },
     {
       "step": "execute",
       "status": "complete",
-      "artifact": "current-task/executions/responsive-playfield-sizing.yaml",
-      "summary": "Responsive playfield sizing implemented in board.js and index.css — viewport/container scale with visualViewport fallback, DPR-backed canvas, min cell (13px) and max (300×600) caps, debounced resize listeners (125ms), cached hot-path metrics, safe-area padding, touch-action none, and 720px column stacking. All 17 subtasks checked; eslint passed."
+      "artifact": "current-task/executions/ghost-piece-rendering.yaml",
+      "summary": "Ghost blocks populated via downward simulation (checkBlocksCollision) in updateGhostBlocks at each drawBoard; draw order and 0.28 alpha unchanged. board.js only; all subtasks checked."
     },
     {
       "step": "review",
       "status": "complete",
       "artifact": "current-task/review-validations/r1-validation.yaml",
-      "summary": "Review approved — all requirements met, lint passed, ready for acceptance."
+      "summary": "Ghost simulation in board.js meets all requirements; lint passed; no blockers."
     },
     {
       "step": "acceptance",
       "status": "complete",
       "artifact": "current-task/review-validations/r1-validation.yaml",
-      "summary": "User accepted work after review — all 14 requirements met, lint passed."
+      "summary": "User accepted at ready_for_acceptance with explicit sync request for tetris-clone-frp ghost-piece-rendering. Approved for sync; integrate deferred."
     },
     {
       "step": "sync",
       "status": "complete",
-      "artifact": "current-task/syncs/responsive-playfield-sizing.yaml",
-      "summary": "Committed 29219ac (board.js, index.css); merged origin/master (up to date); pushed feature/responsive-playfield-sizing to origin."
+      "artifact": "current-task/syncs/ghost-piece-rendering.yaml",
+      "summary": "Committed 1d90ff2 on feature/ghost-piece-rendering; merged origin/master; pushed to origin/feature/ghost-piece-rendering. User requested sync only — integrate deferred."
     },
     {
-      "step": "integrate",
+      "step": "execute",
       "status": "complete",
-      "artifact": "current-task/integrates/responsive-playfield-sizing.yaml",
-      "summary": "Merged feature/responsive-playfield-sizing into master (merge commit 45da06f); pushed origin/master. 2 files changed (board.js, index.css)."
+      "artifact": "current-task/executions/ghost-piece-rendering.yaml",
+      "summary": "Incremental keybinding update on ghost-piece-rendering worktree (user override, no new worktree). Hold changed C to D. Space toggles pause/unpause via existing pause function (same stream as pause button). Hard drop remains up arrow only. Updated menu help, README, NEXT_STEPS, and ghost-piece hard-drop references. Lint passed. Do NOT integrate."
     },
     {
-      "step": "fix",
+      "step": "review",
       "status": "complete",
       "artifact": "current-task/review-validations/r2-validation.yaml",
-      "summary": "User rejected post-integrate outcome; fix_required recorded with r2-validation and ## Fix subtasks for layout and viewport fixes."
-    },
-    {
-      "step": "execute",
-      "status": "complete",
-      "artifact": "current-task/executions/responsive-playfield-sizing.yaml",
-      "summary": "Fix-2: compact panels (48px canvases, no labels/margins), single-screen horizontal layout, viewport-fit=cover, visibility MutationObserver refresh, min-cell scales below 130×260 when needed. Touched board.js, index.css, index.html. Lint passed."
-    },
-    {
-      "step": "review",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r3-validation.yaml",
-      "summary": "Fix-2 code approved. All ## Fix items met in board.js/index.css/index.html. User browser playtest (resize, portrait, DPR, orientation) pending before acceptance."
-    },
-    {
-      "step": "fix",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r4-validation.yaml",
-      "summary": "User direction after playtest — mobile shows only playfield+hold+score; main menu full-width buttons and no scroll. fix_required r4 recorded."
-    },
-    {
-      "step": "execute",
-      "status": "complete",
-      "artifact": "current-task/executions/responsive-playfield-sizing.yaml",
-      "summary": "Fix-3: mobile ≤720px hides right-side-container (upcoming, pause, upload) and lines score; desktop unchanged. Menu 100dvh no-scroll shell with 100%-width flex buttons. CSS-only; lint passed."
-    },
-    {
-      "step": "review",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r5-validation.yaml",
-      "summary": "Fix-3 mobile hide CSS and menu button width pass static review; menu scroll blocked by hidden game-container min-height 100dvh (fix_required). User browser playtest pending for mobile layout acceptance."
-    },
-    {
-      "step": "fix",
-      "status": "skipped",
-      "artifact": "current-task/next-steps/mobile-upcoming-queue.yaml",
-      "summary": "Deferred mobile UI follow-ups documented (upcoming queue, game controls, lines score, phone controls) as 4 next-step specs from task #2."
-    },
-    {
-      "step": "execute",
-      "status": "complete",
-      "artifact": "current-task/executions/responsive-playfield-sizing.yaml",
-      "summary": "Fix-4: CSS collapses visibility:hidden .game-container (height/min-height 0) so hidden game shell no longer stacks 100dvh under menu. Full height restores when game visible. Lint passed."
-    },
-    {
-      "step": "review",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r6-validation.yaml",
-      "summary": "Fix-4 menu scroll fix approved static review; ready_for_acceptance pending user browser playtest for mobile layout."
+      "summary": "Incremental keybinding review approved. Hold KeyD, Space toggles pause via existing pauseGame stream, hard drop Arrow Up only, menu/README/NEXT_STEPS/docs consistent. Ghost rendering in board.js intact from prior sync. game.js input changes out of ghost spec scope but user-approved override — non-blocking deferred_scope. Lint passed. readiness.status ready_for_acceptance. Integrate deferred."
     },
     {
       "step": "acceptance",
       "status": "complete",
-      "artifact": "current-task/review-validations/r6-validation.yaml",
-      "summary": "User playtested and accepted responsive-playfield-sizing including fix rounds 2-4 and ad-hoc tweaks: board.js removed side-panel height cap in measureAvailableBounds; index.css menu buttons clamp height, board flex-shrink 0, desktop min-width 721px restores 90px previews."
-    },
-    {
-      "step": "fix",
-      "status": "skipped",
-      "artifact": "current-task/status.json",
-      "summary": "Parent-agent desktop repair (not sheep-execute): restored pre-task-2 baseline for >720px — fixed 300×600 board, 180px panels, 50px margins, 90px previews, 200×200 menu buttons; HTML labels (Hold, Score:, Lines:, Upcoming) restored; board.js isMobileLayout() gate so desktop uses fixed BOARD_WIDTH/HEIGHT only. Mobile ≤720px unchanged. Prior acceptance superseded; user re-playtesting. Sync blocked."
-    },
-    {
-      "step": "acceptance",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r6-validation.yaml",
-      "summary": "User accepted (good enough) after re-playtest — desktop >720px baseline restored, mobile responsive layout, all fix rounds and ad-hoc tweaks included."
+      "artifact": "current-task/review-validations/r2-validation.yaml",
+      "summary": "User accepted incremental keybinding + ghost work at ready_for_acceptance. Approved full completion pipeline — sync, integrate, close."
     }
   ]
 }

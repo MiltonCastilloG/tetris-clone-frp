@@ -1,0 +1,7 @@
+approved: true
+content: |
+  Incremental keybinding execute complete per execution evidence: hold remapped KeyC→KeyD (isD/dKeyDowns), Space merged into pauseGame toggle stream with preventDefault, hard drop limited to ArrowUp only.
+  On-screen controls-help (index.html), README controls section, NEXT_STEPS item 7, and ghost spec/story hard-drop references updated consistently; no stale KeyC or Space-hard-drop refs in public/.
+  Prior ghost-piece requirements remain satisfied: board.js ghost simulation, draw order, and 0.28 alpha unchanged since sync commit 1d90ff2.
+  Verify: pnpm run lint passed (exit 0).
+  [scope] public/assets/js/game.js input-handler changes are outside ghost-piece-rendering spec scope.out; user-approved incremental override after sync.

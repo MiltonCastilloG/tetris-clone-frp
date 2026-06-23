@@ -1,0 +1,112 @@
+meta:
+  worktree: ghost-piece-rendering
+  generated_by: spec-maker
+  task: |
+    Feature: Ghost piece rendering
+
+      As a player
+      I want to see where the active piece will land
+      So that I can place pieces accurately
+
+      Background:
+        Given ghost computation and rendering live entirely in board.js from fallingBlocks and lockedMap on redraw without game.js changes
+        And the playfield draws layers in order: background/grid, locked blocks, ghost, active falling piece
+        And ghost rendering uses the active piece color at reduced opacity via drawGhostCell at approximately 0.28 alpha
+        And when fallingBlocks is empty no ghost cells are rendered
+
+      Scenario: Ghost shows hard-drop rest position
+        Given an active falling piece above the stack
+        When the board is drawn
+        Then ghostBlocks is the piece position after repeated downward steps until one more step would collide with locked cells or bounds
+        And that position matches where hard drop (Arrow Up) would rest the piece
+
+      Scenario: Ghost at rest overlaps active piece
+        Given an active falling piece that cannot move down
+        When the board is drawn
+        Then ghostBlocks occupies the same cells as the active falling piece
+
+      Scenario: Ghost updates with piece and board changes
+        Given an active falling piece
+        When the piece moves, rotates, or soft-drops
+        Or when lockedMap visualization changes
+        Then ghostBlocks is recomputed before draw
+
+      Scenario: No ghost without active piece
+        Given fallingBlocks is empty
+        When the board is drawn
+        Then no ghost cells are rendered
+  branch: feature/ghost-piece-rendering
+  context: current-task/status.json
+
+title: Ghost piece rendering
+type: feature
+
+summary: >
+  Show a semi-transparent ghost of the active falling piece at its hard-drop
+  rest position so players can aim placements. Ghost position is derived from
+  the current falling piece and locked playfield state during each board redraw,
+  drawn beneath the active piece at reduced opacity.
+
+requirements:
+  - id: ghost-board-only
+    description: >
+      Compute and render the ghost entirely within the playfield board renderer
+      from the current falling piece and locked-cell map on each redraw, without
+      changing game-loop logic.
+  - id: ghost-draw-order
+    description: >
+      Draw playfield layers in order: background/grid, locked blocks, ghost,
+      then the active falling piece.
+  - id: ghost-opacity
+    description: >
+      Render ghost cells using the active piece color at reduced opacity
+      (approximately 0.28 alpha) via the existing ghost cell draw style.
+  - id: ghost-hard-drop-position
+    description: >
+      Position the ghost by simulating repeated downward steps from the active
+      piece until one more step would collide with locked cells or playfield
+      bounds; the result must match the rest position produced by hard drop.
+  - id: ghost-at-rest-overlap
+    description: >
+      When the active piece cannot move down, the ghost occupies the same
+      cells as the active falling piece.
+  - id: ghost-recompute-on-change
+    description: >
+      Recompute ghost position before each draw when the falling piece moves,
+      rotates, or soft-drops, or when the locked-cell map changes.
+  - id: ghost-hidden-without-piece
+    description: >
+      Render no ghost cells when there is no active falling piece.
+
+scope:
+  in:
+    - Playfield board renderer ghost computation and drawing
+    - Ghost rest-position simulation from falling piece and locked cells
+    - Layer ordering so ghost appears under the active piece
+  out:
+    - Game-loop or input-handler changes
+    - Hard-drop behavior changes
+    - New npm dependencies
+    - Ghost rendering when no active falling piece exists
+
+constraints:
+  - no-commit
+  - no-new-deps
+
+acceptance:
+  - Ghost appears at the hard-drop rest position while a piece is falling above the stack
+  - Ghost rest position matches hard drop (Arrow Up) for the same piece state
+  - When the piece cannot move down, ghost cells overlap the active piece cells
+  - Ghost updates after move, rotate, soft-drop, or locked-map change before the next draw
+  - No ghost cells render when there is no active falling piece
+  - Draw order is background/grid, locked blocks, ghost, active falling piece
+  - Ghost uses reduced opacity (~0.28 alpha) with the active piece color
+  - npm run lint passes
+
+assumptions:
+  - Ghost computation and rendering stay confined to the board renderer module
+  - At-rest ghost overlapping the active piece follows standard Tetris behavior
+  - Existing ghost cell draw style at ~0.28 alpha is reused without visual redesign
+  - Ghost is hidden only when no falling piece is present; other hide conditions are out of scope
+
+open_questions: []
