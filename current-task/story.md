@@ -14,7 +14,7 @@ Feature: Ghost piece rendering
     Given an active falling piece above the stack
     When the board is drawn
     Then ghostBlocks is the piece position after repeated downward steps until one more step would collide with locked cells or bounds
-    And that position matches where hard drop (Arrow Up / Space) would rest the piece
+    And that position matches where hard drop (Arrow Up) would rest the piece
 
   Scenario: Ghost at rest overlaps active piece
     Given an active falling piece that cannot move down

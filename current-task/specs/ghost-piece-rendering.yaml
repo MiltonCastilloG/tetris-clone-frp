@@ -18,7 +18,7 @@ meta:
         Given an active falling piece above the stack
         When the board is drawn
         Then ghostBlocks is the piece position after repeated downward steps until one more step would collide with locked cells or bounds
-        And that position matches where hard drop (Arrow Up / Space) would rest the piece
+        And that position matches where hard drop (Arrow Up) would rest the piece
 
       Scenario: Ghost at rest overlaps active piece
         Given an active falling piece that cannot move down
@@ -95,7 +95,7 @@ constraints:
 
 acceptance:
   - Ghost appears at the hard-drop rest position while a piece is falling above the stack
-  - Ghost rest position matches hard drop (Arrow Up / Space) for the same piece state
+  - Ghost rest position matches hard drop (Arrow Up) for the same piece state
   - When the piece cannot move down, ghost cells overlap the active piece cells
   - Ghost updates after move, rotate, soft-drop, or locked-map change before the next draw
   - No ghost cells render when there is no active falling piece

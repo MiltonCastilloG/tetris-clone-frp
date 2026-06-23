@@ -35,9 +35,15 @@ const ticks = new Stream((next) => setInterval(next, CLOCK_TICK_MS));
 const keyDowns = new Stream((next) =>
   document.addEventListener('keydown', next)
 );
-const pauseGame = new Stream((next) =>
+const isSpace = (event) => 'Space' === event.code;
+const pauseBtnClicks = new Stream((next) =>
   document.querySelector('.js-pause-btn').addEventListener('click', next)
 );
+const spaceKeyDowns = keyDowns.filter(isSpace).map((event) => {
+  event.preventDefault();
+  return event;
+});
+const pauseGame = Stream.merge(pauseBtnClicks, spaceKeyDowns);
 const uploadGame = new Stream((next) =>
   document.querySelector('.js-upload-game-btn').addEventListener('click', next)
 );
@@ -289,11 +295,7 @@ export const InitGame = ({ tetrominoState, mapState, boardState }) => {
   });
 
   const isUp = (event) => 'ArrowUp' === event.code;
-  const isSpace = (event) => 'Space' === event.code;
-  const hardDropKeyDowns = Stream.merge(
-    keyDowns.filter(isUp),
-    keyDowns.filter(isSpace)
-  );
+  const hardDropKeyDowns = keyDowns.filter(isUp);
   hardDropKeyDowns.subscribe(() => {
     while (canCurrentTetrominoMoveDown()) {
       tetromino.dispatch({ type: 'DOWN' });
@@ -302,11 +304,11 @@ export const InitGame = ({ tetrominoState, mapState, boardState }) => {
     settleCurrentTetrominoIfSafe();
   });
 
-  const isC = (event) => 'KeyC' === event.code;
-  const cKeyDowns = keyDowns
-    .filter(isC)
+  const isD = (event) => 'KeyD' === event.code;
+  const dKeyDowns = keyDowns
+    .filter(isD)
     .filter(() => !boardData.getState().lockHold);
-  cKeyDowns.subscribe(() => {
+  dKeyDowns.subscribe(() => {
     const { color } = tetromino.getState();
     const { hold, tetrominoQueue } = boardData.getState();
     const fallingTetromino = getSpecificTetromino(color);

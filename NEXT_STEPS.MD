@@ -10,7 +10,7 @@ Done:
 - `5.2` collision redesign with projected-state checks and rotation kick handling.
 - `5.3` single upcoming queue canvas (`4x12`), 3 clipped `4x4` slots, `Upcoming` label, flat style.
 - `5.4` side panel readability tuning for score/lines sizing and spacing.
-- `7` key controls remap pass (`ArrowUp` hard drop, `Space` alias, `KeyA/KeyS` rotations, `ArrowDown` immediate floor settle).
+- `7` key controls remap pass (`ArrowUp` hard drop, `Space` pause, `KeyD` hold, `KeyA/KeyS` rotations, `ArrowDown` immediate floor settle).
 - `9` replace const-only `Array.from(...).forEach` index loops in `board.js` with `for...of` (or `for...in` only where index keys matter and style agrees).
 - `10` second pass on `public/assets/js/lib/stream.js`: review `mutableRef` holder pattern for `scan` / `withLatestFrom`; keep semantics, simplify or document invariants (e.g. `withLatestFrom` may emit before `other` has emitted).
 - `11` native ESM (`import`/`export`, module entry in `index.html`), client split (`config/`, `utils`, `collision`, `api`, `initGame`); ESLint `public/**/*.js` is `sourceType: 'module'` with `no-undef` and `no-unused-vars` enabled.
@@ -247,7 +247,7 @@ Files:
 
 Actions:
 
-- Review active key mappings and behaviors (`ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Space`, `KeyC`) to a new mapping (MovementLeft `ArrowLeft`, MovementRight `ArrowRight`, MovementDown `ArrowDown`, HardDrop `ArrowUp`, Hold `KeyC`, RotateLeft `KeyA`, rotateRight `KeyS`)
+- Review active key mappings and behaviors (`ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Space`, `KeyD`) to a new mapping (MovementLeft `ArrowLeft`, MovementRight `ArrowRight`, MovementDown `ArrowDown`, HardDrop `ArrowUp`, Pause `Space`, Hold `KeyD`, RotateLeft `KeyA`, rotateRight `KeyS`)
 - Make MovementDown `ArrowDown` movement bypass ground lock-delay wait (immediate settle behavior once piece reaches floor).
 - Ensure MovementDown `ArrowDown` behavior stays consistent with manual drop expectations and does not regress scoring/line clear flow.
 

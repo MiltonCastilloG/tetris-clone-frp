@@ -1,72 +1,51 @@
 meta:
   worktree: ghost-piece-rendering
   generated_by: execute-plan
-  subtasks: current-task/subtasks/ghost-piece-rendering.md
-  spec: current-task/specs/ghost-piece-rendering.yaml
+  subtasks: user-override-incremental
   context: current-task/status.json
   status: complete
-  constraints: [no-commit, no-new-deps]
+  constraints: [no-commit, no-new-deps, no-integrate]
 
 paths:
   created: []
-  modified: [public/assets/js/board.js, current-task/subtasks/ghost-piece-rendering.md]
+  modified:
+    - public/assets/js/game.js
+    - public/index.html
+    - public/assets/css/index.css
+    - README.md
+    - NEXT_STEPS.MD
+    - current-task/story.md
+    - current-task/specs/ghost-piece-rendering.yaml
   deleted: []
   unplanned: []
 
 subtasks:
   - index: 1
-    text: Confirm playfield draw order is background and grid, then locked blocks, ghost layer, then active falling piece.
+    text: Change hold key from C to D in game.js.
     status: done
     checked: true
-    paths: [public/assets/js/board.js]
-    note: drawBoard order already correct; no edit.
+    paths: [public/assets/js/game.js]
+    note: KeyC hold filter replaced with KeyD (isD / dKeyDowns).
   - index: 2
-    text: Confirm ghost cell drawing already uses the active piece color at roughly 0.28 alpha and change nothing if compliant.
+    text: Bind Space to pause/unpause using existing pause toggle stream.
     status: done
     checked: true
-    paths: [public/assets/js/board.js]
-    note: drawGhostCell uses globalAlpha 0.28; no edit.
+    paths: [public/assets/js/game.js]
+    note: pauseGame merges pause button clicks and Space keydowns; Space removed from hard drop; preventDefault on Space.
   - index: 3
-    text: Implement ghost rest-position simulation by stepping falling block positions downward against the locked map until one more step would collide or leave bounds.
+    text: Update on-screen help and relevant docs for new bindings.
     status: done
     checked: true
-    paths: [public/assets/js/board.js]
-    note: canBlocksMoveDown + computeGhostBlocks via checkBlocksCollision.
+    paths:
+      - public/index.html
+      - public/assets/css/index.css
+      - README.md
+      - NEXT_STEPS.MD
+      - current-task/story.md
+      - current-task/specs/ghost-piece-rendering.yaml
+    note: Menu controls-help paragraph added; README controls section; NEXT_STEPS item 7; hard-drop refs now Arrow Up only.
   - index: 4
-    text: Recompute ghost blocks from that simulation at the start of each board redraw using current falling blocks and locked map.
-    status: done
-    checked: true
-    paths: [public/assets/js/board.js]
-    note: updateGhostBlocks called at start of drawBoard.
-  - index: 5
-    text: When simulation cannot move down, set ghost blocks to the same cells as the active falling piece.
-    status: done
-    checked: true
-    paths: [public/assets/js/board.js]
-    note: Loop stops before illegal step; at-rest ghost equals fallingBlocks.
-  - index: 6
-    text: Leave ghost blocks empty when there is no active falling piece so the ghost layer draws nothing.
-    status: done
-    checked: true
-    paths: [public/assets/js/board.js]
-    note: computeGhostBlocks returns [] when fallingBlocks empty.
-  - index: 7
-    text: Manually confirm ghost rest position matches hard drop for a falling piece above the stack.
-    status: done
-    checked: true
-    note: Same downward step + checkBlocksCollision as game.js hard-drop loop.
-  - index: 8
-    text: Manually confirm ghost cells overlap the active piece when it cannot move down.
-    status: done
-    checked: true
-    note: Zero-step simulation leaves ghost identical to fallingBlocks.
-  - index: 9
-    text: Manually confirm ghost updates after horizontal move, rotation, soft drop, and locked-map visualization change.
-    status: done
-    checked: true
-    note: All board mutations call drawBoard which recomputes ghost first.
-  - index: 10
-    text: Run npm run lint on changed files and fix any issues.
+    text: Run pnpm run lint and fix any issues.
     status: done
     checked: true
     note: pnpm run lint exit 0.
@@ -76,13 +55,18 @@ verify:
     exit: 0
     passed: true
 
-deviations: []
+deviations:
+  - kind: user_approved
+    note: User override skipped subtask list; incremental keybinding/docs work on existing feature branch after sync.
+
 open_questions: []
 
 hotspots:
-  - path: public/assets/js/board.js
-    reason: ghost-simulation-collision-parity
+  - path: public/assets/js/game.js
+    reason: pause-stream-merge-space-hard-drop-removal
 
 review_scope:
-  mode: full
-  focus_paths: [public/assets/js/board.js]
+  mode: focused
+  focus_paths:
+    - public/assets/js/game.js
+    - public/index.html

@@ -1,7 +1,7 @@
 approved: true
 content: |
-  All spec requirements met (ghost-board-only, ghost-draw-order, ghost-opacity, ghost-hard-drop-position, ghost-at-rest-overlap, ghost-recompute-on-change, ghost-hidden-without-piece).
-  board.js adds computeGhostBlocks/updateGhostBlocks using checkBlocksCollision downward steps; updateGhostBlocks runs at the start of each drawBoard. Draw order remains background/grid, locked, ghost, falling; drawGhostCell uses 0.28 alpha.
-  Ghost simulation matches game.js hard-drop collision semantics (dy+1 via checkBlocksCollision); at-rest ghost equals fallingBlocks; empty fallingBlocks yields no ghost cells.
-  All 10 subtasks checked and verified against diff and source. Only application change is public/assets/js/board.js; game.js untouched; no new dependencies.
+  Incremental keybinding execute complete per execution evidence: hold remapped KeyC→KeyD (isD/dKeyDowns), Space merged into pauseGame toggle stream with preventDefault, hard drop limited to ArrowUp only.
+  On-screen controls-help (index.html), README controls section, NEXT_STEPS item 7, and ghost spec/story hard-drop references updated consistently; no stale KeyC or Space-hard-drop refs in public/.
+  Prior ghost-piece requirements remain satisfied: board.js ghost simulation, draw order, and 0.28 alpha unchanged since sync commit 1d90ff2.
   Verify: pnpm run lint passed (exit 0).
+  [scope] public/assets/js/game.js input-handler changes are outside ghost-piece-rendering spec scope.out; user-approved incremental override after sync.

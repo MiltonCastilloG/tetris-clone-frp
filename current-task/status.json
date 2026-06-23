@@ -27,7 +27,8 @@
     "subtasks": "current-task/subtasks/ghost-piece-rendering.md",
     "execution": "current-task/executions/ghost-piece-rendering.yaml",
     "review": "current-task/reviews/ghost-piece-rendering.yaml",
-    "review_validation": "current-task/review-validations/r1-validation.yaml"
+    "review_validation": "current-task/review-validations/r2-validation.yaml",
+    "sync": "current-task/syncs/ghost-piece-rendering.yaml"
   },
   "constraints": [
     "no-commit",
@@ -82,6 +83,30 @@
       "status": "complete",
       "artifact": "current-task/review-validations/r1-validation.yaml",
       "summary": "User accepted at ready_for_acceptance with explicit sync request for tetris-clone-frp ghost-piece-rendering. Approved for sync; integrate deferred."
+    },
+    {
+      "step": "sync",
+      "status": "complete",
+      "artifact": "current-task/syncs/ghost-piece-rendering.yaml",
+      "summary": "Committed 1d90ff2 on feature/ghost-piece-rendering; merged origin/master; pushed to origin/feature/ghost-piece-rendering. User requested sync only — integrate deferred."
+    },
+    {
+      "step": "execute",
+      "status": "complete",
+      "artifact": "current-task/executions/ghost-piece-rendering.yaml",
+      "summary": "Incremental keybinding update on ghost-piece-rendering worktree (user override, no new worktree). Hold changed C to D. Space toggles pause/unpause via existing pause function (same stream as pause button). Hard drop remains up arrow only. Updated menu help, README, NEXT_STEPS, and ghost-piece hard-drop references. Lint passed. Do NOT integrate."
+    },
+    {
+      "step": "review",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r2-validation.yaml",
+      "summary": "Incremental keybinding review approved. Hold KeyD, Space toggles pause via existing pauseGame stream, hard drop Arrow Up only, menu/README/NEXT_STEPS/docs consistent. Ghost rendering in board.js intact from prior sync. game.js input changes out of ghost spec scope but user-approved override — non-blocking deferred_scope. Lint passed. readiness.status ready_for_acceptance. Integrate deferred."
+    },
+    {
+      "step": "acceptance",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r2-validation.yaml",
+      "summary": "User accepted incremental keybinding + ghost work at ready_for_acceptance. Approved full completion pipeline — sync, integrate, close."
     }
   ]
 }
