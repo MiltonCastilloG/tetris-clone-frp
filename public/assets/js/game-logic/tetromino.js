@@ -1,5 +1,5 @@
-import { TETROMINO_DEFINITIONS } from './lib/tetromino-definitions.js';
-import { TETROMINO_COLORS } from './lib/tetrominoes.js';
+import { TETROMINO_DEFINITIONS } from '../lib/tetromino-definitions.js';
+import { TETROMINO_COLORS } from '../lib/tetrominoes.js';
 
 const translateStateBlocks = ({ blocks, offsetX = 0 }, spawnAnchor) =>
   blocks.map((block) => ({
