@@ -2,7 +2,7 @@ import {
   createFreshGamePayload,
   createLoadedGamePayload,
   startGameLoop,
-} from './initGame.js';
+} from '../initGame.js';
 
 const showBoard = () => {
   document.querySelector('.music').play();

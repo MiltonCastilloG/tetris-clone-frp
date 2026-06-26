@@ -1,4 +1,4 @@
-import { EMPTY_SPACE } from './config/settings.js';
+import { EMPTY_SPACE } from '../config/settings.js';
 
 export const pipe =
   (...fns) =>

@@ -1,14 +1,14 @@
 import { LOCKED_MAP, BASE_LINE_CLEAR_SCORE } from './config/settings.js';
 import { fetchForSetup } from './api.js';
-import { getRandomTetromino } from './tetromino.js';
+import { getRandomTetromino } from './game-logic/tetromino.js';
 import {
   addTetrominoToBoard,
   addHoldToBoard,
   addScoreToBoard,
   addUpcomingTetrominoesToBoard,
   remapLockedMapVisualization,
-} from './board.js';
-import { InitGame } from './game.js';
+} from './game-render/board.js';
+import { InitGame } from './game-logic/game.js';
 
 export const startGameLoop = (states) => InitGame(states);
 
